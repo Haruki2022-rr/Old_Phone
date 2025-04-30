@@ -1,13 +1,22 @@
 {
-  "name": "comp5347_a2",
+  "name": "oldphonedeals_tut10_g4",
   "version": "1.0.0",
+  "description": "Overview",
   "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node server.js",
+    "server": "nodemon server.js",
+    "client": "npm start --prefix client",
+    "dev": "concurrently \"npm run server\" \"npm run client\""
   },
+
+  "repository": {
+    "type": "git",
+    "url": "https://github.sydney.edu.au/COMP5347-COMP4347-2025/OldPhoneDeals_TuT10_G4.git"
+  },
+  "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
   "dependencies": {
     "express": "^5.1.0"
   }

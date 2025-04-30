@@ -1,0 +1,11 @@
+# Server-side deps
+/node_modules/
+
+# Client-side deps & build
+/client/node_modules/
+/client/build/
+
+# Env files, logs, etc.
+.env
+.DS_Store
+npm-debug.log*
