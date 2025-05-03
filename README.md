@@ -1,4 +1,23 @@
-# OldPhoneDeals_TuT10_G4
+#setup
+/backend
+npm install 
+
+/frontend
+npm install
+
+edit .env (MONGO_URI=your_local_db_path)
+
+/backend 
+<!-- to import the JSON data to db -->
+node seeder.js 
+
+/backend
+node index.js
+
+/frontend
+npm run
+
+#OldPhoneDeals_TuT10_G4
 
 Overview
 
