@@ -1,0 +1,26 @@
+const mongoose = require('mongoose');
+
+// no id requitred
+const ReviewSchema = new mongoose.Schema({
+  reviewer: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  rating:   { type: Number },
+  comment:  { type: String },
+  hidden:   { type: Boolean, default: false }
+}, { _id: false } );
+
+const PhoneSchema = new mongoose.Schema({
+  title:    { type: String, required: true },
+  brand:    { type: String, required: true, enum: [
+                'Samsung','Apple','HTC','Huawei','Nokia',
+                'LG','Motorola','Sony','BlackBerry'
+             ]},
+  image:    { type: String, required: true },       
+  stock:    { type: Number, default: 0 },
+//   ObjectId refers to a document in the User model’s collection
+  seller:   { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }, 
+  price:    { type: Number, required: true },
+  disabled: { type: Boolean, default: false },
+  reviews:  [ReviewSchema],
+});
+
+module.exports = mongoose.model('Phone', PhoneSchema, 'phones');
