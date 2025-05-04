@@ -1,18 +1,22 @@
-// reference: https://medium.com/@sindoojagajam2023/setting-up-your-first-mern-stack-project-a-step-by-step-tutorial-0a4f88fa4e98
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
-function App() {
-  const [message, setMessage] = useState('Comp5347');
-  useEffect(() => {
-   axios.get('http://localhost:5000/')
-   .then(response => setMessage(response.data))
-   .catch(error => console.log(error));
-   }, []);
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Layout from "./pages/Layout";
+import Main   from "./pages/Main";     
+import Auth  from "./pages/Auth";
+import Checkout from "./pages/Checkout";
+import Profile from "./pages/Profile";
+
+export default function App() {
   return (
-   <div className="App">
-   <h1>MERN Stack App</h1>
-   <p>{message}</p>
-   </div>
-   );
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Layout />}>
+          <Route index element={<Main />} />          
+          <Route path="auth" element={<Auth />} />
+          <Route path="checkout" element={<Checkout />} />
+          <Route path="profile" element={<Profile />} />
+          <Route path="*" element={<NoPage />} />
+        </Route>
+      </Routes>
+    </BrowserRouter>
+  );
 }
-export default App;
