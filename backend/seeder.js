@@ -28,6 +28,7 @@ async function seed() {
         lastname: u.lastname,
         email: u.email,
         password: defaultHashPassword,
+        isVerified: true,
         _id: new mongoose.Types.ObjectId(u._id.$oid),
     }));
     await User.insertMany(users);
