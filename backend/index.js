@@ -18,9 +18,9 @@ app.use(
 );
 
 // MongoDB Connection
-const uri = process.env.MONGO_URI;
+const db_uri = process.env.MONGO_URI;
 mongoose
-  .connect(uri)
+  .connect(db_uri)
   .then(() => console.log('MongoDB connected'))
   .catch(err => console.error('MongoDB connection error:', err));
 
