@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const bcrypt = require("bcryptjs");
+const crypto = require('crypto');
 
 const UserSchema = new mongoose.Schema({
   firstname: { type: String, required: true },
@@ -15,5 +16,19 @@ const UserSchema = new mongoose.Schema({
 UserSchema.pre("save", async function () {
     this.password = await bcrypt.hash(this.password, 10);
   });
+
+// reference: https://rajat-m.medium.com/how-to-set-up-email-verification-using-node-js-and-react-js-376e09b371e2
+userSchema.methods.getVerificationToken = function () {
+    const token = crypto.randomBytes(32).toString('hex');
+  
+    this.verificationToken = crypto
+      .createHash('sha256')
+      .update(token)
+      .digest('hex');
+  
+    this.verificationTokenExpire = Date.now() + 60 * 60 * 1000; // 60 minutes
+  
+    return token;
+};
 
 module.exports = mongoose.model('User', UserSchema, 'users');
