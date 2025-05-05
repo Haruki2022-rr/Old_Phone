@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 const ProfilePage = () => {
 const [user, setUser] = useState({
@@ -9,6 +9,11 @@ const [user, setUser] = useState({
     location: "Sydney, AU",
     joinDate: "May 2025",
 });
+useEffect(() => {
+    fetch('http://localhost:5000/api/oldPhoneDeals/users')
+        .then((res) => res.json())
+        .then((data) => console.log(data[0]));
+}, []);
 
 const [isEditing, setIsEditing] = useState(false);
 
