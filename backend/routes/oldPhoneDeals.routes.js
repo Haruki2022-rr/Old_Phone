@@ -3,7 +3,7 @@ const router = require("express").Router();
 
 // add method to use controller function here
 // example: 
-// GET    /api/phoneDeals/auth
+// GET    /api/oldPhoneDeals/auth
 // router.get("/auth", sighup);
 
 
