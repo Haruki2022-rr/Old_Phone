@@ -1,20 +1,22 @@
 const router = require("express").Router();
+const express = require("express");
 // use require to get controller here
 const User = require('../models/User');
 const Phone = require('../models/Phone');
+const { signup, emailVerification } = require("../controllers/auth");
+
 // add method to use controller function here
 // example: 
-// GET    /api/phoneDeals/auth
-// router.get("/auth", sighup);
+// GET    /api/oldPhoneDeals/auth
 
-router.get('/users', async (req, res) => {
-    const users = await User.find();
-    res.json(users);
-});
+//signup : /api/oldPhoneDeals/auth/signup
+router.post("/auth/signup", signup);
 
-router.get('/phones', async (req, res) => {
-    const phones = await Phone.find();
-    res.json(phones);
-});
+//email verification : /api/oldPhoneDeals/auth/verifyemail/:token
+router.get("/auth/verifyemail/:token", emailVerification);
+
+
+
+
 
 module.exports = router;
