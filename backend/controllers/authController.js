@@ -3,10 +3,15 @@
 const User = require("../models/User");
 const sendVerificationEmail = require('../utils/email');
 const crypto = require("crypto")
+const bcrypt = require("bcryptjs");
+
 
 async function signup(req, res) {
     try {
       const { firstname, lastname, email, password } = req.body;
+      if(!firstname|| !lastname|| !email || !password ){
+        return res.json({message:'All fields are required'})
+      }
       // if the user already exist, immidiatly return with a JSON response (status: 200)
       if (await User.exists({ email })) {
         return res
@@ -77,8 +82,8 @@ async function emailVerification(req, res) {
   
     // the user is verified
     // Mark as verified & clear token fields
-    newUser.isVerified              = true;
-    newUser.emailVerificationToken       = undefined;
+    newUser.isVerified = true;
+    newUser.emailVerificationToken = undefined;
     newUser.emailVerificationTokenExpires = undefined;
     await newUser.save();
   
@@ -102,8 +107,49 @@ async function emailVerification(req, res) {
   }
 }
 
+async function login(req, res) {
+  try {
+    const { email, password } = req.body;
+    if(!email || !password ){
+      return res
+      .status(400) 
+      .json({message:'All fields are required'})
+    }
+    const user = await User.findOne({ email });
+    if(!user){
+      return res
+      .status(401)
+      .json({message:'Incorrect email or password' }) 
+    }
+    if (!user.isVerified) {
+      return res
+      .status(401)
+      .json({ message: "Please verify your email before logging in" });
+    }
+    const auth = await bcrypt.compare(password,user.password)
+    if (!auth) {
+      return res
+      .status(403)
+      .json({message:'Incorrect email or password' }) 
+    }
+    
+
+    // Store the user’s ID in the session
+    req.session.userId = user._id;
+    res.status(200).json({
+      success: true,
+      message: "User logged in and session initialized successfully",
+      user: {
+        id: user._id,
+        email: user.email
+        }
+    });
+  } catch (error) {
+    console.error(error);
+  }
+}
 
 
   module.exports = {
-    signup, emailVerification
+    signup, emailVerification, login
   };
