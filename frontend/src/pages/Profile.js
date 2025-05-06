@@ -2,18 +2,26 @@ import React, { useState, useEffect } from "react";
 
 const ProfilePage = () => {
 const [user, setUser] = useState({
-    name: "Willliam Qiu",
+    firstname: "Willliam",
+    lastname: "Qiu",
     email: "wqiu8445@uni.sydney.edu.au",
     bio: "Student",
     avatar: "/logo192.png",
-    location: "Sydney, AU",
+    _id: "500483747",
     joinDate: "May 2025",
 });
 useEffect(() => {
-    fetch('http://localhost:5000/api/oldPhoneDeals/users')
-        .then((res) => res.json())
-        .then((data) => console.log(data[0]));
-}, []);
+    fetch("http://localhost:5000/api/oldPhoneDeals/users")
+        .then(res => res.json())
+        .then(data => {
+        // assume data is an array and you want the first element
+            const fetched = data[1];
+            console.log(fetched);
+        // merge it into your state (or just replace it if shapes match)
+            setUser(prev => ({ ...prev, ...fetched }));
+        })
+        .catch(err => console.error(err));
+    }, []);
 
 const [isEditing, setIsEditing] = useState(false);
 
@@ -39,7 +47,7 @@ return (
     <div className="profile-container">
         <div className="profile-header">
             <img src={user.avatar} alt="Profile" className="profile-avatar" />
-            <h1>{user.name}</h1>
+            <h1>{user.firstname} {user.lastname}</h1>
         </div>
 
     <div className="profile-content">
@@ -68,11 +76,11 @@ return (
                     <textarea name="bio" value={user.bio} onChange={handleChange} />
                 </div>
                 <div className="form-group">
-                    <label>Location:</label>
+                    <label>ID:</label>
                     <input
                         type="text"
-                        name="location"
-                        value={user.location}
+                        name="ID"
+                        value={user._id}
                         onChange={handleChange}
                     />
                 </div>
@@ -87,7 +95,7 @@ return (
                     <strong>Bio:</strong> {user.bio}
                 </p>
                 <p>
-                    <strong>Location:</strong> {user.location}
+                    <strong>ID:</strong> {user._id}
                 </p>
                 <p>
                     <strong>Member since:</strong> {user.joinDate}
