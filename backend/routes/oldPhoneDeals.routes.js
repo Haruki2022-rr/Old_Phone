@@ -3,7 +3,7 @@ const express = require("express");
 // use require to get controller here
 const User = require('../models/User');
 const Phone = require('../models/Phone');
-
+const { signup, emailVerification } = require("../controllers/auth");
 
 
 // add method to use controller function here
