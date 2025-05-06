@@ -16,6 +16,15 @@ router.post("/auth/signup", signup);
 router.get("/auth/verifyemail/:token", emailVerification);
 
 
+router.get('/users', async (req, res) => {
+    const users = await User.find();
+    res.json(users);
+});
+
+router.get('/phones', async (req, res) => {
+    const phones = await Phone.find();
+    res.json(phones);
+});
 
 
 
