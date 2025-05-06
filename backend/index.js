@@ -2,6 +2,7 @@
 // This file is entry point.
 const express = require('express');
 const mongoose = require('mongoose');
+const path = require('path');
 const cors = require('cors'); //To enable cross-origin requests
 require('dotenv').config(); // To store sentitve info in .env file
 const app = express();
