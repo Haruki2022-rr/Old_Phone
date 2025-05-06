@@ -8,13 +8,14 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const oldPhoneDeals = require("./routes/oldPhoneDeals.routes");
 const session = require("express-session");
-const path    = require("path");
+const path = require("path");
 
 // Middleware
 
 //allow cros orign from port 3000 to 5000
 app.use(cors(
-  {origin: "http://localhost:3000",  // React’s dev server
+  {origin: "http://localhost:3000",
+  methods: ["GET","POST","PUT","DELETE"],  // React’s dev server
   credentials: true  }
 ));
 

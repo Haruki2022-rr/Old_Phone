@@ -1,7 +1,7 @@
 const router = require("express").Router();
 const express = require("express");
 // use require to get controller here
-const { signup, emailVerification } = require("../controllers/auth");
+const { signup, emailVerification } = require("../controllers/authController");
 
 // add method to use controller function here
 // example: 

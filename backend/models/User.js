@@ -8,25 +8,30 @@ const UserSchema = new mongoose.Schema({
   email:     { type: String, required: true, unique: true},
   password:  { type: String, required: true }, 
   isVerified: { type: Boolean, default: false }, //for email verification
-  emailVerifyToken:          { type: String }, // hashed verification token
-  emailVerifyTokenExpires:   { type: Date }, // when token becomes invalid
+  emailVerificationToken:          { type: String }, // hashed verification token
+  emailVerificationTokenExpires:   { type: Date }, // when token becomes invalid
+}, {
+  timestamps: true
 });
 
+
 // before document.save(), hash the password
-UserSchema.pre("save", async function () {
-    this.password = await bcrypt.hash(this.password, 10);
-  });
+UserSchema.pre("save", async function(next) {
+  if (!this.isModified("password")) return next();
+  this.password = await bcrypt.hash(this.password, 10);
+  next();
+});
 
 // reference: https://rajat-m.medium.com/how-to-set-up-email-verification-using-node-js-and-react-js-376e09b371e2
-userSchema.methods.getVerificationToken = function () {
+UserSchema.methods.getVerificationToken = function () {
     const token = crypto.randomBytes(32).toString('hex');
   
-    this.verificationToken = crypto
+    this.emailVerificationToken = crypto
       .createHash('sha256')
       .update(token)
       .digest('hex');
   
-    this.verificationTokenExpire = Date.now() + 60 * 60 * 1000; // 60 minutes
+    this.emailVerificationTokenExpire = Date.now() + 60 * 60 * 1000; // 60 minutes
   
     return token;
 };
