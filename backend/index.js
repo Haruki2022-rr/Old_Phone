@@ -6,6 +6,7 @@ const cors = require('cors'); //To enable cross-origin requests
 require('dotenv').config(); // To store sentitve info in .env file
 const app = express();
 const PORT = process.env.PORT || 5000;
+const oldPhoneDeals = require("./routes/oldPhoneDeals.routes");
 
 // Middleware
 app.use(cors());
@@ -17,16 +18,15 @@ app.use(
 );
 
 // MongoDB Connection
-const uri = process.env.MONGO_URI;
+const db_uri = process.env.MONGO_URI;
 mongoose
-  .connect(uri)
+  .connect(db_uri)
   .then(() => console.log('MongoDB connected'))
   .catch(err => console.error('MongoDB connection error:', err));
 
-// Basic Route
-app.get('/', (req, res) => {
- res.send('Hello from the backend!');
-});
+// Route to routes/oldPhoneDeals.routes.js
+app.use("/api/oldPhoneDeals", oldPhoneDeals);
+
 // Start Server
 app.listen(PORT, () => {
  console.log(`Server running on port ${PORT}`);

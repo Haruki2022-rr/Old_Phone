@@ -3,14 +3,13 @@
 const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const { createSecretToken } = require('../utils/createSecretToken'); 
-const sendVerificationEmail = require('./utils/sendVerificationEmail');
+const sendVerificationEmail = require('./utils/email');
 
 module.exports.Signup = async (req, res, next) => {
     try {
       const { firstname, lastname, email, password } = req.body;
-      const existingUser = await User.findOne({ email });
       // if the user already exist, immidiatly return with a JSON response (status: 200)
-      if (existingUser) {
+      if (await User.exists({ email })) {
         return res
             .status(409) //conflict
             .json({ message: "Acount already exists" });
@@ -24,15 +23,17 @@ module.exports.Signup = async (req, res, next) => {
         const verificationToken = newUser.getVerificationToken();
       
         // Save the user with token and expire
-        await user.save();
+        await newUser.save();
       
         // Build a verification URL. example:"https://your-domain.com/api/auth/verifyemail/abcdef123456"
         const verificationUrl = 
           `${req.protocol}://${req.get("host")}` +
           `/api/oldPhoneDeals/auth/verifyemail/${verificationToken}`;   
+          //router.get("/auth/verifyemail/:token", verifyEmail);
       
         // send the mail
-        await sendVerificationEmail({ name: user.name, email: user.email }, verificationUrl);
+        const fullName = `${newUser.firstname} ${newUser.lastname}`;
+        await sendVerificationEmail({ name: fullName, email: newUser.email }, verificationUrl);
       
         // Respond to the client
         res.status(201).json({
@@ -43,26 +44,25 @@ module.exports.Signup = async (req, res, next) => {
       } else {
         res.status(400).json({ message: "Invalid user data" });
       }
-
-
-
-
-
-
-
-
-      const token = createSecretToken(newUser._id);
-      // setting coockie -> Set-Cookie header to the frontend with name "token" and the JWT
-      res.cookie("token", token, {
-        withCredentials: true, //for cross origin request(different port from backend and frontend)
-        httpOnly: true, // client JS can't read this for security reason
-      });
-      res
-        .status(201)
-        // response with JSON body with success message, success:true flag, and user(a document)
-        .json({ message: "Successfully signed in", success: true, nweUser });
-      next();
     } catch (error) {
       console.error(error);
     }
   };
+
+
+// I will put this code in verfyEmail func
+//When the user clicks the verification link, validates the token
+// 
+// 
+// 
+  const token = createSecretToken(newUser._id);
+  // setting coockie -> Set-Cookie header to the frontend with name "token" and the JWT
+  res.cookie("token", token, {
+    withCredentials: true, //for cross origin request(different port from backend and frontend)
+    httpOnly: true, // client JS can't read this for security reason
+  });
+  res
+    .status(201)
+    // response with JSON body with success message, success:true flag, and user(a document)
+    .json({ message: "Successfully signed in", success: true, newUser });
+  next();
