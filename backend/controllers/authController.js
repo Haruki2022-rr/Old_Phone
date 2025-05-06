@@ -4,8 +4,9 @@ const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const { createSecretToken } = require('../utils/createSecretToken'); 
 const sendVerificationEmail = require('./utils/email');
+const crypto = require("crypto")
 
-module.exports.Signup = async (req, res, next) => {
+async function signup(req, res) {
     try {
       const { firstname, lastname, email, password } = req.body;
       // if the user already exist, immidiatly return with a JSON response (status: 200)
@@ -50,19 +51,61 @@ module.exports.Signup = async (req, res, next) => {
   };
 
 
-// I will put this code in verfyEmail func
 //When the user clicks the verification link, validates the token
-// 
-// 
-// 
-  const token = createSecretToken(newUser._id);
-  // setting coockie -> Set-Cookie header to the frontend with name "token" and the JWT
-  res.cookie("token", token, {
-    withCredentials: true, //for cross origin request(different port from backend and frontend)
-    httpOnly: true, // client JS can't read this for security reason
-  });
-  res
-    .status(201)
-    // response with JSON body with success message, success:true flag, and user(a document)
-    .json({ message: "Successfully signed in", success: true, newUser });
-  next();
+//router.get("/auth/verifyemail/:token", verifyEmail);
+async function emailVerification(req, res) {
+  try {
+    // get token from the URL
+    const hashedToken = crypto
+      .createHash("sha256")
+      .update(req.params.token) //:token from URL 
+      .digest("hex");
+  
+    // find user with the token
+    const newUser = await User.findOne({ emailVerificationToken: hashedToken });
+    if (!newUser) {
+      // No user had that token
+      return res
+        .status(400)
+        .json({ message: "Invalid verification link" });
+    }
+      
+    // Check whether the user's token is expired
+    if (newUser.emailVerificationTokenExpires < Date.now()) {
+      return res
+        .status(400)
+        .json({ message: "Verification link has expired" });
+    }
+  
+    // the user is verified
+    // Mark as verified & clear token fields
+    newUser.isVerified              = true;
+    newUser.emailVerificationToken       = undefined;
+    newUser.emailVerificationTokenExpires = undefined;
+    await newUser.save();
+  
+    // Store the user’s ID in the session
+    req.session.userId = newUser._id;
+    res.status(201).json({
+      success: true,
+      message: "User authenticated and session initialized successfully",
+      user: {
+        id: newUser._id,
+        email: newUser.email
+        }
+    });
+    
+  
+  } catch (error) {
+    console.error("verifyEmail error:", error);
+    return res
+      .status(500)
+      .json({ message: "Server error during email verification" });
+  }
+}
+
+
+
+  module.exports = {
+    signup, emailVerification
+  };
