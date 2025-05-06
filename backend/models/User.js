@@ -8,8 +8,8 @@ const UserSchema = new mongoose.Schema({
   email:     { type: String, required: true, unique: true},
   password:  { type: String, required: true }, 
   isVerified: { type: Boolean, default: false }, //for email verification
-  verifyToken:          { type: String }, // hashed verification token
-  verifyTokenExpires:   { type: Date }, // when token becomes invalid
+  emailVerifyToken:          { type: String }, // hashed verification token
+  emailVerifyTokenExpires:   { type: Date }, // when token becomes invalid
 });
 
 // before document.save(), hash the password

@@ -7,10 +7,32 @@ require('dotenv').config(); // To store sentitve info in .env file
 const app = express();
 const PORT = process.env.PORT || 5000;
 const oldPhoneDeals = require("./routes/oldPhoneDeals.routes");
+const session = require("express-session");
+const path    = require("path");
 
 // Middleware
-app.use(cors());
+
+//allow cros orign from port 3000 to 5000
+app.use(cors(
+  {origin: "http://localhost:3000",  // React’s dev server
+  credentials: true  }
+));
+
 app.use(express.json());
+
+// session
+app.use(
+  session({
+    secret: "topSecret",
+    resave: true,
+    saveUninitialized: true,
+    cookie: {
+      httpOnly: true,
+      maxAge: 7 * 24 * 60 * 60 * 1000
+    }
+  })
+);
+
 // at the URL path /images/<filename>
 app.use(
   '/images',
