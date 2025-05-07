@@ -5,6 +5,10 @@ const User = require('../models/User');
 const Phone = require('../models/Phone');
 const { signup, emailVerification, login } = require("../controllers/authController");
 
+// Order Controller
+const { createOrder } = require("../controllers/orderController");
+const Order = require("../models/Order");
+
 // add method to use controller function here
 // example: 
 // GET    /api/oldPhoneDeals/auth
@@ -28,6 +32,8 @@ router.get('/phones', async (req, res) => {
     const phones = await Phone.find();
     res.json(phones);
 });
+
+router.post('/orders', createOrder);
 
 
 
