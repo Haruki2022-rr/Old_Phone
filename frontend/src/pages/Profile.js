@@ -100,6 +100,8 @@ const ProfilePage = () => {
             alert("Error updating password");
         });
         */
+       // Would change password in the backend here
+        // For now, just simulate a successful password change
         setPasswords({ current: user.password, new: "" });
         alert("Password updated successfully");
         window.location.reload(); // refresh after password change
