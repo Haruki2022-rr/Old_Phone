@@ -14,7 +14,7 @@ export default function App() {
           <Route path="auth" element={<Auth />} />
           <Route path="checkout" element={<Checkout />} />
           <Route path="profile" element={<Profile />} />
-          <Route path="*" element={<NoPage />} />
+          
         </Route>
       </Routes>
     </BrowserRouter>
