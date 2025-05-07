@@ -12,7 +12,7 @@ const session = require("express-session");
 
 // Middleware
 
-//allow cros orign from port 3000 to 5000
+//allow cross origin from port 3000 to 5000/5050
 app.use(cors(
   {origin: "http://localhost:3000",
   methods: ["GET","POST","PUT","DELETE"],  // React’s dev server
