@@ -47,8 +47,8 @@ const handleChange = (e) => {
 };
 
 return (
-    <div className="profile-container max-w-4xl mx-auto mt-10 p-6 bg-white rounded-lg shadow-md">
-        <div className="profile-header flex items-center space-x-6">
+    <div className=" max-w-4xl mx-auto mt-10 p-6 bg-white rounded-lg ">
+        <div className=" flex items-center space-x-6">
             <img
                 src={user.avatar}
                 alt="Profile"
