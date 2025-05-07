@@ -9,7 +9,6 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const oldPhoneDeals = require("./routes/oldPhoneDeals.routes");
 const session = require("express-session");
-const path = require("path");
 
 // Middleware
 
