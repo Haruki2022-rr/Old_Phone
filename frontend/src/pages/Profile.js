@@ -18,17 +18,48 @@ const ProfilePage = () => {
     const [passwords, setPasswords] = useState({ current: user.password, new: "" });
     const [listings, setListings] = useState([]);
     const [comments, setComments] = useState([]);
+    const [commentDetails, setCommentDetails] = useState([]);
     
     // Fetch user once on mount
     useEffect(() => {
     axios.get("/auth/currentUser")
         .then(res => {
             const fetched = res.data.user;
-            console.log(fetched);
             setUser(fetched);
         })
         .catch(err => console.error(err));
     }, []);
+
+    useEffect(() => {
+        axios.get("/phones")
+            .then(res => {
+                const fetchedListings = res.data.filter(phone => phone.seller === user._id);
+                setListings(fetchedListings);
+            })
+            .catch(err => console.error(err));
+    }, [user._id]);
+
+    useEffect(() => {
+        if (comments.length === 0) {
+            axios.get("/phones")
+                .then(res => {
+                    const fetchedComments = res.data;
+                    const userComments = [];
+                    const details = [];
+                    fetchedComments.forEach(comment => {
+                        comment.reviews.forEach(review => {
+                            if (review.reviewer === user._id) {
+                                userComments.push(review);
+                                details.push(comment);
+                            }
+                        });
+                    });
+                    setComments(userComments);
+                    setCommentDetails(details);
+                })
+                .catch(err => console.error(err));
+        }
+    }, [user._id, comments.length]);
 
 
 
@@ -215,51 +246,62 @@ const ProfilePage = () => {
     );
 
     const renderManageListings = () => (
-        <div>
+        <div className="space-y-6">
             <button
-                className="px-6 py-2 font-semibold text-white bg-cyan-500 rounded-lg shadow-md hover:bg-cyan-600"
+                className="w-full px-6 py-3 bg-cyan-600 text-white rounded-lg shadow hover:bg-cyan-700 transition duration-200"
                 onClick={() => alert("Add Listing")}
             >
                 Add Listing
             </button>
-            <ul className="mt-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {listings.map((listing, index) => (
-                    <li key={index} className="flex justify-between items-center">
-                        <span>{listing.title}</span>
-                        <div>
+                    <div key={index} className="bg-white rounded-lg shadow p-4 border border-gray-200">
+                        <h3 className="text-lg font-semibold text-gray-800">{listing.title}</h3>
+                        <div className="mt-4 flex justify-end space-x-2">
                             <button
-                                className="px-4 py-2 text-white bg-green-500 rounded-lg shadow-md hover:bg-green-600"
+                                className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition duration-200"
                                 onClick={() => alert("Enable/Disable Listing")}
                             >
                                 Enable/Disable
                             </button>
                             <button
-                                className="px-4 py-2 text-white bg-red-500 rounded-lg shadow-md hover:bg-red-600 ml-2"
+                                className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition duration-200"
                                 onClick={() => alert("Remove Listing")}
                             >
                                 Remove
                             </button>
                         </div>
-                    </li>
+                    </div>
                 ))}
-            </ul>
+            </div>
         </div>
     );
 
     const renderViewComments = () => (
-        <ul>
+        <div className="space-y-4">
             {comments.map((comment, index) => (
-                <li key={index} className="border-b py-2">
-                    <p>{comment.text}</p>
-                    <button
-                        className="text-cyan-500 hover:underline"
-                        onClick={() => alert("Hide/Show Comment")}
-                    >
-                        {comment.hidden ? "Show" : "Hide"}
-                    </button>
-                </li>
+                <div key={index} className="bg-white rounded-lg shadow p-4 border hover:shadow-lg transition duration-200">
+                    <h2 className="text-xl font-semibold text-gray-800">
+                        {commentDetails[index].title}
+                    </h2>
+                    <p className="text-sm text-gray-600">
+                        Brand: {commentDetails[index].brand}
+                    </p>
+                    <p className="mt-2 text-gray-700">{comment.comment}</p>
+                    <div className="flex items-center justify-between mt-4">
+                        <span className="text-yellow-500 font-bold">
+                            Rating: {comment.rating}
+                        </span>
+                        <button
+                            className="px-4 py-2 text-sm font-semibold text-cyan-500 border border-cyan-500 rounded hover:bg-cyan-500 hover:text-white transition duration-200"
+                            onClick={() => alert("Hide/Show Comment")}
+                        >
+                            {comment.hidden ? "Show" : "Hide"}
+                        </button>
+                    </div>
+                </div>
             ))}
-        </ul>
+        </div>
     );
 
     if (!user || !user._id) {
