@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import axios from "axios";
 import './tailwind.css';
 
 const ProfilePage = () => {
@@ -6,7 +7,7 @@ const ProfilePage = () => {
         firstname: "Willliam",
         lastname: "Qiu",
         email: "wqiu8445@uni.sydney.edu.au",
-        _id: "500483747",
+        _id: "",
         password: ""
     });
     
@@ -20,20 +21,22 @@ const ProfilePage = () => {
     
     // Fetch user once on mount
     useEffect(() => {
-    fetch("http://localhost:5050/api/oldPhoneDeals/users")
-        .then(res => res.json())
-        .then(data => {
-        const fetched = data[0];
-        console.log(fetched);
-        setUser(fetched);
+    axios.get("/auth/currentUser")
+        .then(res => {
+            const fetched = res.data.user;
+            console.log(fetched);
+            setUser(fetched);
         })
         .catch(err => console.error(err));
     }, []);
+
+
 
     // Sync draft with official user whenever it changes
     useEffect(() => {
         setDraftUser(user);
     }, [user]);
+    
 
     const handleEdit = () => {
         setIsEditing(true);
@@ -108,8 +111,15 @@ const ProfilePage = () => {
     };
 
     const handleSignOut = () => {
-        // Add sign-out logic
-        window.location.href = "/";
+        axios.post("/auth/logout")
+            .then(() => {
+                alert("You have been signed out.");
+                window.location.href = "/";
+            })
+            .catch(err => {
+                console.error(err);
+                alert("Error signing out. Please try again.");
+            });
     };
 
     // Render functions
@@ -251,6 +261,21 @@ const ProfilePage = () => {
             ))}
         </ul>
     );
+
+    if (!user || !user._id) {
+        return (
+            <div className="profile-container max-w-4xl mx-auto mt-10 p-6 bg-white rounded-lg shadow-md">
+                <h1 className="font-bold text-3xl text-gray-800">Profile</h1>
+                <p className="text-gray-500 mt-4">You must be signed in to view this page.</p>
+                <button
+                    className="px-6 py-2 font-semibold text-white bg-cyan-500 rounded-lg shadow-md hover:bg-cyan-600 mt-4"
+                    onClick={() => (window.location.href = "/auth")}
+                >
+                    Go to Login
+                </button>
+            </div>
+        );
+    }
 
     return (
         <div className="profile-container max-w-4xl mx-auto mt-10 p-6 bg-white rounded-lg shadow-md">

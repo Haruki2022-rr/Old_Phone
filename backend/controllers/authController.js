@@ -16,7 +16,7 @@ async function signup(req, res) {
       if (await User.exists({ email })) {
         return res
             .status(409) //conflict
-            .json({ message: "Acount already exists" });
+            .json({ message: "Account already exists" });
       }
       // if the user is not exist -> create account
       // create document and insert into the User collection. user have a document that has been inserted.
