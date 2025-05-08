@@ -3,7 +3,7 @@ const express = require("express");
 // use require to get controller here
 const User = require('../models/User');
 const Phone = require('../models/Phone');
-const { signup, emailVerification, login } = require("../controllers/authController");
+const { signup, emailVerification, login, logout } = require("../controllers/authController");
 
 // add method to use controller function here
 // example: 
@@ -17,6 +17,9 @@ router.get("/auth/verifyemail/:token", emailVerification);
 
 //signup: /api/oldPhoneDeals/auth/login
 router.post("/auth/login", login);
+
+//logout: /api/oldPhoneDeals/auth/logout
+router.post("/auth/logout", logout);
 
 
 router.get('/users', async (req, res) => {
