@@ -32,6 +32,8 @@ router.post("/auth/forgetPassword", forgetPassword);
 //resert password link: /api/oldPhoneDeals/auth/resetPasswordLink/:token
 router.post("/auth/resetPassword/:token", resetPassword);
 
+//get current use via cookie session /api/oldPhoneDeals/auth/getCurrentUser
+router.get("/auth/currentUser", getCurrentUser);
 
 router.get('/users', async (req, res) => {
     const users = await User.find();

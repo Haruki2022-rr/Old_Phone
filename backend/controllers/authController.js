@@ -236,6 +236,15 @@ async function resetPassword(req, res) {
   res.status(200).json({ success: true, message: "Password reset successful" });
 }
 
+async function getCurrentUser(req, res) {
+  const id = req.session.userId;
+  if (!id) return res.status(401).json({ message: "Not authenticated" });
+
+  // get user info except for password
+  const user = await User.findById(id).select("-password");
+  res.json({ user });
+}
+
   module.exports = {
-    signup, emailVerification, login, logout, forgetPassword, resetPassword
+    signup, emailVerification, login, logout, forgetPassword, resetPassword, getCurrentUser
   };
