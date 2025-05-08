@@ -125,6 +125,24 @@ const ProfilePage = () => {
             });
     };
 
+    //TODO: Handle listing removal
+    const handleListingRemoval = (listing) => {
+        axios.post("/phones/removeListing", { listingId: listing._id })
+            .then(response => {
+                if (response.status === 200) {
+                    alert("Listing removed successfully.");
+                    setListings(prev => prev.filter(item => item._id !== listing._id));
+                } else {   
+                    alert(response.data.message || "Failed to remove listing.");
+                }
+            })
+    };
+
+    //TODO: Handle listing enabling/disabling
+    const handleListingEnabling = (listing) => {
+        axios.post("/phones/updateListing", { listingId: listing._id, enabled: !listing.enabled })
+    }
+
     // TODO: Handle hiding comments
     const handleCommentHiding = (comment) => {
         axios.get("/phones")
