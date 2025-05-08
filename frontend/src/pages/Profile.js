@@ -2,22 +2,28 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import './tailwind.css';
 
+
+
 const ProfilePage = () => {
     const [user, setUser] = useState({
-        firstname: "Willliam",
-        lastname: "Qiu",
-        email: "wqiu8445@uni.sydney.edu.au",
+        firstname: "",
+        lastname: "",
+        email: "",
         _id: "",
         password: ""
     });
     
     const [draftUser, setDraftUser] = useState(user);
+    const [hiddenPassword, setHiddenPassword] = useState({
+        password: ""
+    });
 
     const [activeTab, setActiveTab] = useState("");
     const [isEditing, setIsEditing] = useState(false);
     const [passwords, setPasswords] = useState({ current: user.password, new: "" });
     const [listings, setListings] = useState([]);
     const [comments, setComments] = useState([]);
+    const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
     const [commentDetails, setCommentDetails] = useState([]);
     
     // Fetch user once on mount
@@ -25,6 +31,7 @@ const ProfilePage = () => {
     axios.get("/auth/currentUser")
         .then(res => {
             const fetched = res.data.user;
+            console.log(fetched);
             setUser(fetched);
         })
         .catch(err => console.error(err));
@@ -40,25 +47,24 @@ const ProfilePage = () => {
     }, [user._id]);
 
     useEffect(() => {
-        if (comments.length === 0) {
-            axios.get("/phones")
-                .then(res => {
-                    const fetchedComments = res.data;
-                    const userComments = [];
-                    const details = [];
-                    fetchedComments.forEach(comment => {
-                        comment.reviews.forEach(review => {
-                            if (review.reviewer === user._id) {
-                                userComments.push(review);
-                                details.push(comment);
-                            }
-                        });
+        axios.get("/phones")
+            .then(res => {
+                const fetchedComments = res.data;
+                const userComments = [];
+                const details = [];
+                fetchedComments.forEach(comment => {
+                    comment.reviews.forEach(review => {
+                        if (review.reviewer === user._id) {
+                            userComments.push(review);
+                            details.push(comment);
+                        }
                     });
-                    setComments(userComments);
-                    setCommentDetails(details);
-                })
-                .catch(err => console.error(err));
-        }
+                });
+                setComments(userComments);
+                setCommentDetails(details);
+            })
+            .catch(err => console.error(err));
+        
     }, [user._id, comments.length]);
 
 
@@ -83,16 +89,68 @@ const ProfilePage = () => {
         setDraftUser(prev => ({ ...prev, [name]: value }));
     };
 
+    const handleHiddenPasswordChange = (e) => {
+        const { name, value } = e.target;
+        setHiddenPassword(prev => ({ ...prev, [name]: value }));
+    };
+
     const handleSave = (e) => {
         e.preventDefault();
-        setUser(draftUser);
-        setIsEditing(false);
-        // TODO: Call API to persist draftUser
+
+        if (!hiddenPassword.password) {
+            alert("Please enter a password.");
+            return;
+        }
+
+        axios.post("/auth/updateProfile", { userDetails: draftUser, hiddenPassword: hiddenPassword })
+            .then(response => {
+                if (response.status === 200) {
+                    alert("Profile updated successfully.");
+                    draftUser.password = ""; // Clear password field after saving
+                    hiddenPassword.password = ""; // Clear hidden password field
+                    setUser(draftUser);
+                    setIsEditing(false);
+                    setShowPasswordConfirm(false);
+                    
+                } else {
+                    alert(response.data.message || "Failed to update profile.");
+                }
+            })
+            .catch(error => {
+                if (error.response) {
+                    alert(error.response.data.message);
+                } else {
+                    alert("An unexpected error occurred.");
+                }
+            });
     };
+
+    // TODO: Handle hiding comments
+    const handleCommentHiding = (comment) => {
+        axios.get("/phones")
+            .then(res => {
+                const fetchedComments = res.data;
+                const userComments = [];
+                const details = [];
+                fetchedComments.forEach(comment => {
+                    comment.reviews.forEach(review => {
+                        if (review.reviewer === user._id) {
+                            userComments.push(review);
+                            details.push(comment);
+                        }
+                    });
+                });
+                setComments(userComments);
+                setCommentDetails(details);
+            })
+            .catch(err => console.error(err));
+
+    };
+        
+
 
     const handlePasswordChange = (e) => {
         e.preventDefault();
-        console.log(user.password);
         const { name, value } = e.target;
         setPasswords(prev => ({ ...prev, [name]: value }));
     };
@@ -100,45 +158,37 @@ const ProfilePage = () => {
     const handlePasswordSubmit = (e) => {
         e.preventDefault();
         // Check that current password matches before submitting
-        if (passwords.current !== user.password) {
-            alert("Current password is incorrect");
-            return;
-        }
 
         const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
         if (!passwordRegex.test(passwords.new)) {
             alert("New password must have at least 8 characters, including a capital letter, a lowercase letter, a number, and a symbol.");
             return;
         }
-        /** 
-        fetch("http://localhost:5050/api/oldPhoneDeals/users/updatePassword", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                userId: user._id,
-                currentPassword: passwords.current,
-                newPassword: passwords.new
-            })
-        })
-        .then(res => {
-            if (!res.ok) throw new Error('Password update failed');
-            return res.json();
+
+        axios.post("/auth/updatePassword", {
+            currentPassword: passwords.current,
+            newPassword: passwords.new,
+            email: user.email
         })
         .then(response => {
-            setPasswords({ current: "", new: "" });
-            alert("Password updated successfully");
-            window.location.reload(); // refresh after password change
+            if (response.status === 200) {
+                alert(response.data.message);
+                window.location.reload();
+            } else {
+                alert(response.data.message || "Failed to update password.");
+            }
         })
-        .catch(err => {
-            console.error(err);
-            alert("Error updating password");
+        .catch(error => {
+            if (error.response) {
+                alert(error.response.data.message);
+            } else {
+                alert("An unexpected error occurred.");
+            }
         });
-        */
-       // Would change password in the backend here
-        // For now, just simulate a successful password change
-        setPasswords({ current: user.password, new: "" });
-        alert("Password updated successfully");
-        window.location.reload(); // refresh after password change
+        
+
+
+         // refresh after password change
     };
 
     const handleSignOut = () => {
@@ -154,66 +204,102 @@ const ProfilePage = () => {
     };
 
     // Render functions
+    // Note: Add the following state in your component alongside the other useState hooks:
+    // const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
+
     const renderEditProfile = () => (
-    <div>
-        {isEditing ? (
-        <form onSubmit={handleSave} className="space-y-4">
-            <div className="form-group">
-            <label className="block text-gray-700 font-medium">First Name:</label>
-            <input
-                type="text"
-                name="firstname"
-                value={draftUser.firstname}
-                onChange={handleDraftChange}
-                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500"
-            />
-            </div>
-            <div className="form-group">
-            <label className="block text-gray-700 font-medium">Last Name:</label>
-            <input
-                type="text"
-                name="lastname"
-                value={draftUser.lastname}
-                onChange={handleDraftChange}
-                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500"
-            />
-            </div>
-            <div className="form-group">
-            <label className="block text-gray-700 font-medium">Email:</label>
-            <input
-                type="email"
-                name="email"
-                value={draftUser.email}
-                onChange={handleDraftChange}
-                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500"
-            />
-            </div>
-            <div className="flex space-x-2">
+        <div>
+            {isEditing ? (
+            <>
+                {!showPasswordConfirm ? (
+                <form className="space-y-4">
+                    <div className="form-group">
+                    <label className="block text-gray-700 font-medium">First Name:</label>
+                    <input
+                        type="text"
+                        name="firstname"
+                        value={draftUser.firstname}
+                        onChange={handleDraftChange}
+                        className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                    />
+                    </div>
+                    <div className="form-group">
+                    <label className="block text-gray-700 font-medium">Last Name:</label>
+                    <input
+                        type="text"
+                        name="lastname"
+                        value={draftUser.lastname}
+                        onChange={handleDraftChange}
+                        className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                    />
+                    </div>
+                    <div className="form-group">
+                    <label className="block text-gray-700 font-medium">Email:</label>
+                    <input
+                        type="email"
+                        name="email"
+                        value={draftUser.email}
+                        onChange={handleDraftChange}
+                        className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                    />
+                    </div>
+                    <div className="flex space-x-2">
+                    <button
+                        type="button"
+                        onClick={() => setShowPasswordConfirm(true)}
+                        className="px-6 py-2 font-semibold text-white bg-cyan-500 rounded-lg shadow-md hover:bg-cyan-600"
+                    >
+                        Update Profile
+                    </button>
+                    <button
+                        type="button"
+                        onClick={handleCancel}
+                        className="px-6 py-2 font-semibold text-gray-700 bg-gray-200 rounded-lg shadow-md hover:bg-gray-300"
+                    >
+                        Cancel
+                    </button>
+                    </div>
+                </form>
+                ) : (
+                <form onSubmit={handleSave} className="space-y-4">
+                    <div className="form-group">
+                    <label className="block text-gray-700 font-medium">Enter Password:</label>
+                    <input
+                        type="password"
+                        name="password"
+                        value={hiddenPassword.password}
+                        onChange={handleHiddenPasswordChange}
+                        className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                    />
+                    </div>
+                    <div className="flex space-x-2">
+                    <button
+                        type="submit"
+                        className="px-6 py-2 font-semibold text-white bg-cyan-500 rounded-lg shadow-md hover:bg-cyan-600"
+                    >
+                        Confirm Update
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setShowPasswordConfirm(false)}
+                        className="px-6 py-2 font-semibold text-gray-700 bg-gray-200 rounded-lg shadow-md hover:bg-gray-300"
+                    >
+                        Back
+                    </button>
+                    </div>
+                </form>
+                )}
+            </>
+            ) : (
             <button
-                type="submit"
+                onClick={handleEdit}
                 className="px-6 py-2 font-semibold text-white bg-cyan-500 rounded-lg shadow-md hover:bg-cyan-600"
             >
-                Update Profile
+                Edit Profile
             </button>
-            <button
-                type="button"
-                onClick={handleCancel}
-                className="px-6 py-2 font-semibold text-gray-700 bg-gray-200 rounded-lg shadow-md hover:bg-gray-300"
-            >
-                Cancel
-            </button>
-            </div>
-        </form>
-        ) : (
-        <button
-            onClick={handleEdit}
-            className="px-6 py-2 font-semibold text-white bg-cyan-500 rounded-lg shadow-md hover:bg-cyan-600"
-        >
-            Edit Profile
-        </button>
-        )}
-    </div>
-    );
+            )}
+        </div>
+        );
 
     const renderChangePassword = () => (
     <form onSubmit={handlePasswordSubmit} className="space-y-4">
@@ -294,7 +380,7 @@ const ProfilePage = () => {
                         </span>
                         <button
                             className="px-4 py-2 text-sm font-semibold text-cyan-500 border border-cyan-500 rounded hover:bg-cyan-500 hover:text-white transition duration-200"
-                            onClick={() => alert("Hide/Show Comment")}
+                            onClick={() => handleCommentHiding(comment)}
                         >
                             {comment.hidden ? "Show" : "Hide"}
                         </button>
