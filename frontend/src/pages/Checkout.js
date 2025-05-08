@@ -8,7 +8,7 @@ const CheckoutPage = () => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        axios.get("http://localhost:5000/api/oldPhoneDeals/auth/currentUser", { withCredentials: true })
+        axios.get("http://localhost:5050/api/oldPhoneDeals/auth/currentUser", { withCredentials: true })
             .then(res => {
                 setUser(res.data.user);
                 setLoading(false);
@@ -27,7 +27,7 @@ const CheckoutPage = () => {
             return;
         }
         try {
-            await axios.post("http://localhost:5000/api/oldPhoneDeals/orders", {
+            await axios.post("http://localhost:5050/api/oldPhoneDeals/orders", {
                 userId: user._id,
                 cartItems: cartItems.map(item => ({
                     phoneId: item.phoneId,
@@ -61,7 +61,6 @@ const CheckoutPage = () => {
         <div className="max-w-4xl mx-auto mt-10 p-6 bg-white rounded-lg shadow-md">
             <h1 className="text-3xl font-bold mb-6 text-center">Checkout</h1>
 
-            {/* 用户信息 */}
             <div className="mb-6 p-4 border rounded-md bg-gray-50">
                 <p className="text-lg font-semibold mb-2">Customer Information:</p>
                 <p><strong>Name:</strong> {user.firstname} {user.lastname}</p>
