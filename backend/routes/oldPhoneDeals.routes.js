@@ -4,6 +4,7 @@ const express = require("express");
 const User = require('../models/User');
 const Phone = require('../models/Phone');
 const { signup, emailVerification, login, logout } = require("../controllers/authController");
+const requireAuth = require("../middleware/requireAuth"); // to check if a user has logged in 
 
 // Order Controller
 const { createOrder } = require("../controllers/orderController");

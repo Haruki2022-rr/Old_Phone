@@ -34,6 +34,12 @@ app.use(
   })
 );
 
+// to check if user has logged in -> can be used in routes
+module.exports = function requireAuth(req, res, next) {
+  if (req.session && req.session.userId) return next();
+  return res.status(401).json({ message: "Not authenticated" });
+};
+
 // at the URL path /images/<filename>
 app.use(
   '/images',
