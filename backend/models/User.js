@@ -10,6 +10,8 @@ const UserSchema = new mongoose.Schema({
   isVerified: { type: Boolean, default: false }, //for email verification
   emailVerificationToken:          { type: String }, // hashed verification token
   emailVerificationTokenExpires:   { type: Date }, // when token becomes invalid
+  passwordResetToken:        { type: String },
+  passwordResetTokenExpires: { type: Date },  
 }, {
   timestamps: true
 });
@@ -34,6 +36,18 @@ UserSchema.methods.getVerificationToken = function () {
     this.emailVerificationTokenExpire = Date.now() + 60 * 60 * 1000; // 60 minutes
   
     return token;
+};
+
+UserSchema.methods.getPasswordResetToken = function() {
+  const token = crypto.randomBytes(32).toString("hex");
+
+  this.passwordResetToken = crypto
+    .createHash("sha256")
+    .update(token)
+    .digest("hex");
+
+  this.passwordResetTokenExpires = Date.now() + 60 * 60 * 1000; // 60 minutes
+  return token;
 };
 
 module.exports = mongoose.model('User', UserSchema, 'users');

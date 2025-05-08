@@ -13,8 +13,10 @@ export default function App() {
         <Route path="/" element={<Layout />}>
           <Route index element={<Main />} />          
           <Route path="auth" element={<Auth />} />
+          <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
           <Route path="checkout" element={<Checkout />} />
           <Route path="profile" element={<Profile />} />
+          
           
         </Route>
       </Routes>

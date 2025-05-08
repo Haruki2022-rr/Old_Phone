@@ -1,7 +1,7 @@
 // reference: https://www.freecodecamp.org/news/how-to-secure-your-mern-stack-application/
 // reference: https://rajat-m.medium.com/how-to-set-up-email-verification-using-node-js-and-react-js-376e09b371e2
 const User = require("../models/User");
-const sendVerificationEmail = require('../utils/email');
+const {sendVerificationEmail, sendResetPasswordEmail} = require('../utils/email');
 const crypto = require("crypto")
 const bcrypt = require("bcryptjs");
 
@@ -162,6 +162,80 @@ async function logout(req, res) {
   });
 }
 
+// when user click reset in auth page
+async function forgetPassword(req, res) {
+  try {
+    const {email} = req.body;
+    if(!email){
+      return res.json({message:'Email are required'})
+    }
+    // if the user is not exist, immidiatly return with a JSON response (status: 200)
+    const user = await User.findOne({ email })
+    if (!user) {
+      return res
+          .status(409) //conflict
+          .json({ message: "Acount does not exists" });
+    }
+  
+    // if use exist -> send reset email
+    if (user) {
+      // call method in User model
+      const token = user.getPasswordResetToken();
+    
+      // Save the user with token and expire
+      await user.save();
+    
+      // url to front end: reset-password page
+      const resetPasswordUrl = 
+        `${req.protocol}://${req.get("host")}` +
+        `/reset-password/${token}`;   
+        //router.get("/auth/resetPasswordLink/:token", resetPasswordLink);
+    
+      // send the mail
+      const fullName = `${user.firstname} ${user.lastname}`;
+      await sendResetPasswordEmail({ name: fullName, email: user.email }, resetPasswordUrl);
+    
+      // Respond to the client
+      res.status(201).json({
+        success: true,
+        message: "Reser password email sent",
+      });
+    
+    } else {
+      res.status(400).json({ message: "Invalid user data" });
+    }
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+// similar logic to verify email
+async function resetPassword(req, res) {
+  const hashedToken = crypto
+    .createHash("sha256")
+    .update(req.params.token)
+    .digest("hex");
+
+  const user = await User.findOne({
+    passwordResetToken: hashedToken,
+    passwordResetTokenExpires: { $gt: Date.now() }
+  });
+
+  if (!user) {
+    return res
+      .status(400)
+      .json({ message: "Reset token is expired" });
+  }
+
+  // set the new password (your pre-save hook will hash it)
+  user.password = req.body.password;
+  user.passwordResetToken = undefined;
+  user.passwordResetTokenExpires = undefined;
+  await user.save();
+
+  res.status(200).json({ success: true, message: "Password reset successful" });
+}
+
   module.exports = {
-    signup, emailVerification, login, logout
+    signup, emailVerification, login, logout, forgetPassword, resetPassword
   };
