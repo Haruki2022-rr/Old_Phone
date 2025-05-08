@@ -9,6 +9,7 @@ const mailerSend = new MailerSend({
 //insert your email and name
 const sentFrom = new Sender( process.env.SENDER_EMAIL,  process.env.SENDER_NAME);
 
+// for veificatin mail on signup
 const sendVerificationEmail = async (user, verificationUrl) => {
   const recipients = [
     new Recipient(user.email, user.name)
@@ -37,4 +38,35 @@ const sendVerificationEmail = async (user, verificationUrl) => {
   }
 };
 
-module.exports = sendVerificationEmail;
+
+// for resseting password
+const sendResetPasswordEmail = async (user, verificationUrl) => {
+  const recipients = [
+    new Recipient(user.email, user.name)
+];
+
+  const htmlContent = `
+    <p>Hi ${user.name},</p>
+    <p>please reset your password from this link:</p>
+    <p><a href="${verificationUrl}">${verificationUrl}</a></p>
+    <p>This link will expire in 60 minutes.</p>
+  `;
+
+  const emailParams = new EmailParams()
+    .setFrom(sentFrom)
+    .setTo(recipients)
+    .setReplyTo(sentFrom)
+    .setSubject("Reset your password")
+    .setHtml(htmlContent)
+    .setText(`Hi ${user.name},please reset your password from this link: ${verificationUrl}. This link will expire in 60 minutes.`);
+
+  try {
+    const response = await mailerSend.email.send(emailParams);
+    console.log("reset-password email sent successfully:", response);
+  } catch (error) {
+    console.error("Error sending reset-password email:", error);
+  }
+};
+
+
+module.exports = {sendVerificationEmail, sendResetPasswordEmail};

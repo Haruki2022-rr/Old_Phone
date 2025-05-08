@@ -1,9 +1,10 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Layout from "./pages/Layout";
 import Main   from "./pages/Main";     
-import Auth  from "./pages/Auth";
+import {AuthPage, ResetPasswordPage}  from "./pages/Auth";
 import Checkout from "./pages/Checkout";
 import Profile from "./pages/Profile";
+import "./pages/tailwind.css";
 
 export default function App() {
   return (
@@ -11,10 +12,10 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Layout />}>
           <Route index element={<Main />} />          
-          <Route path="auth" element={<Auth />} />
+          <Route path="auth" element={<AuthPage />} />
+          <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
           <Route path="checkout" element={<Checkout />} />
-          <Route path="profile" element={<Profile />} />
-          
+          <Route path="profile" element={<Profile />} /> 
         </Route>
       </Routes>
     </BrowserRouter>
