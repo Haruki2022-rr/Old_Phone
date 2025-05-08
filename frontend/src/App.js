@@ -1,6 +1,8 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Layout from "./pages/Layout";
-import Main   from "./pages/Main";     
+import Main   from "./pages/Main";
+import Checkout from "./pages/Checkout";
+import Profile from "./pages/Profile";
 import {AuthPage, ResetPasswordPage}  from "./pages/Auth";
 import "./pages/tailwind.css";
 import { CartProvider } from './context/CartContext';
