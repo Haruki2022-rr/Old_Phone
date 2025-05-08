@@ -150,6 +150,18 @@ async function login(req, res) {
 }
 
 
+async function logout(req, res) {
+  req.session.destroy(err => {
+    if (err) {
+      console.error("Logout error:", err);
+      return res.status(500).json({ success: false, message: "Could not log out" });
+    }   
+    // The default cookie name is “connect.sid”
+    res.clearCookie("connect.sid");
+    res.json({ success: true, message: "Logged out successfully" });
+  });
+}
+
   module.exports = {
-    signup, emailVerification, login
+    signup, emailVerification, login, logout
   };
