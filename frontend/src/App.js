@@ -4,6 +4,7 @@ import Main   from "./pages/Main";
 import Auth  from "./pages/Auth";
 import Checkout from "./pages/Checkout";
 import Profile from "./pages/Profile";
+import "./pages/tailwind.css";
 
 export default function App() {
   return (
