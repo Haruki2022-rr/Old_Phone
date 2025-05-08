@@ -1,7 +1,7 @@
 // reference: https://www.freecodecamp.org/news/how-to-secure-your-mern-stack-application/
 // reference: https://rajat-m.medium.com/how-to-set-up-email-verification-using-node-js-and-react-js-376e09b371e2
 const User = require("../models/User");
-const {sendVerificationEmail, sendResetPasswordEmail} = require('../utils/email');
+const {sendVerificationEmail, sendResetPasswordEmail, sendConfirmationEmail} = require('../utils/email');
 const crypto = require("crypto")
 const bcrypt = require("bcryptjs");
 
@@ -16,7 +16,7 @@ async function signup(req, res) {
       if (await User.exists({ email })) {
         return res
             .status(409) //conflict
-            .json({ message: "Acount already exists" });
+            .json({ message: "Account already exists" });
       }
       // if the user is not exist -> create account
       // create document and insert into the User collection. user have a document that has been inserted.
@@ -227,13 +227,46 @@ async function resetPassword(req, res) {
       .json({ message: "Reset token is expired" });
   }
 
-  // set the new password (your pre-save hook will hash it)
+  // set the new password (pre-save hook will hash it)
   user.password = req.body.password;
   user.passwordResetToken = undefined;
   user.passwordResetTokenExpires = undefined;
   await user.save();
 
   res.status(200).json({ success: true, message: "Password reset successful" });
+}
+
+async function updatePassword(req, res) {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ message: "Current password and new password are required" });
+    }
+
+    // Get the current user from session
+    const user = await User.findById(req.session.userId);
+    if (!user) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+
+    // Compare provided current password with the stored hash
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
+      return res.status(403).json({ message: "Current password is incorrect" });
+    }
+
+    // Set the new password (pre-save hook will hash it) and save
+    user.password = newPassword;
+    await user.save();
+
+    const fullName = `${user.firstname} ${user.lastname}`;
+    await sendConfirmationEmail({ name: fullName, email: user.email });
+
+    res.status(200).json({ success: true, message: "Password updated successfully" });
+  } catch (error) {
+    console.error("updatePassword error:", error);
+    res.status(500).json({ message: "Server error while updating password" });
+  }
 }
 
 async function getCurrentUser(req, res) {
@@ -245,6 +278,40 @@ async function getCurrentUser(req, res) {
   res.json({ user });
 }
 
+async function updateProfile(req, res) {
+
+  const { userDetails, hiddenPassword } = req.body;
+  const { firstname, lastname, email } = userDetails;
+  const { password } = hiddenPassword;
+  if (!firstname || !lastname || !email || !password) {
+    return res.status(400).json({ message: "All fields are required" });
+  }
+
+  const user = await User.findById(req.session.userId);
+  if (!user) {
+    return res.status(404).json({ message: "User not found" });
+  }
+
+  const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(403).json({ message: "Current password is incorrect" });
+    }
+  if (!isMatch) {
+    return res.status(403).json({ message: "Entered password is incorrect" });
+  }
+
+  // find user and update
+  
+  user.firstname = firstname;
+  user.lastname = lastname;
+  user.email = email;
+  await user.save();
+
+  res.status(200).json({ message: "User updated successfully" });
+
+  
+}
+
   module.exports = {
-    signup, emailVerification, login, logout, forgetPassword, resetPassword, getCurrentUser
+    signup, emailVerification, login, logout, forgetPassword, resetPassword, getCurrentUser, updatePassword, updateProfile
   };

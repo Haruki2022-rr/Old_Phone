@@ -3,7 +3,7 @@ const express = require("express");
 // use require to get controller here
 const User = require('../models/User');
 const Phone = require('../models/Phone');
-const { signup, emailVerification, login, logout, resetPassword, forgetPassword, getCurrentUser } = require("../controllers/authController");
+const { signup, emailVerification, login, logout, resetPassword, forgetPassword, getCurrentUser, updatePassword, updateProfile } = require("../controllers/authController");
 
 
 // Order Controller
@@ -31,6 +31,14 @@ router.post("/auth/forgetPassword", forgetPassword);
 
 //resert password link: /api/oldPhoneDeals/auth/resetPasswordLink/:token
 router.post("/auth/resetPassword/:token", resetPassword);
+
+//updating password: /api/oldPhoneDeals/auth/updatePassword
+router.post("/auth/updatePassword", updatePassword);
+
+//updating profile: /api/oldPhoneDeals/auth/updateProfile
+router.post("/auth/updateProfile", updateProfile);
+
+
 
 //get current use via cookie session /api/oldPhoneDeals/auth/getCurrentUser
 router.get("/auth/currentUser", getCurrentUser);

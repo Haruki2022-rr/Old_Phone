@@ -28,7 +28,7 @@ export function AuthPage() {
           password: form.password,
         });
         toast.success("Logged in!");
-        navigate("/cart", { replace: true }); // or previous page logic
+        navigate("/profile", { replace: true }); // or previous page logic
       } else if (mode === "signup") {
         await axios.post("/auth/signup", form);
         toast.success("Verification e‑mail sent!");
