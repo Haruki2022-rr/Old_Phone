@@ -4,6 +4,7 @@ const User = require("../models/User");
 const {sendVerificationEmail, sendResetPasswordEmail, sendConfirmationEmail} = require('../utils/email');
 const crypto = require("crypto")
 const bcrypt = require("bcryptjs");
+const Phone = require("../models/Phone");
 
 
 async function signup(req, res) {
@@ -309,9 +310,101 @@ async function updateProfile(req, res) {
 
   res.status(200).json({ message: "User updated successfully" });
 
-  
 }
 
+async function addListing(req, res) {
+  const { title, brand, image, stock, price } = req.body;
+  const user = await User.findById(req.session.userId);
+  if (!user) {
+    return res.status(404).json({ message: "User not found" });
+  }
+  const newListing = new Phone({
+    title,
+    brand,
+    image,
+    stock,
+    price,
+    seller: user._id,
+    reviews: []
+  });
+  await newListing.save();
+  res.status(200).json({ 
+    message: "Listing added successfully", 
+    listing: newListing 
+  });
+}
+
+async function removeListing(req, res) {
+  const { listingId } = req.body;
+  
+  const user = await User.findById(req.session.userId);
+  if (!user) {
+    return res.status(404).json({ message: "User not found" });
+  }
+
+  const listing = await Phone.findById(listingId);
+  console.log("listing removed: \n", listing);
+  if (!listing) {
+    return res.status(404).json({ message: "Listing not found" });
+  }
+
+  // Remove the listing from the database
+  await Phone.findByIdAndDelete(listingId);
+
+  res.status(200).json({ message: "Listing removed successfully" });
+}
+
+async function updateListing(req, res) {
+  const { listingId } = req.body;
+  
+  const user = await User.findById(req.session.userId);
+  if (!user) {
+    return res.status(404).json({ message: "User not found" });
+  }
+
+  const listing = await Phone.findById(listingId);
+  console.log("listing updated: \n", listing);
+  if (!listing) {
+    return res.status(404).json({ message: "Listing not found" });
+  }
+
+  listing.disabled = !listing.disabled;
+  await listing.save();
+
+  res.status(200).json({ message: "Listing updated successfully" });
+}
+
+async function hideComment(req, res) {
+  const { comment, commentDetails } = req.body; // comment is the reviewer id, commentDetails is the phone document
+  const user = await User.findById(req.session.userId);
+  if (!user) {
+    return res.status(404).json({ message: "User not found" });
+  }
+  
+  // Find the phone document by its _id from commentDetails
+  const phone = await Phone.findById(commentDetails._id);
+  if (!phone) {
+    return res.status(404).json({ message: "Phone not found" });
+  }
+  
+  // Locate the review with reviewer id matching comment and mark it as hidden
+  let reviewFound = false;
+  phone.reviews.forEach(review => {
+    if (review.reviewer.toString() === comment) {
+      review.hidden = !review.hidden; // Toggle the hidden status
+      reviewFound = true;
+    }
+  });
+  
+  if (!reviewFound) {
+    return res.status(404).json({ message: "Review not found" });
+  }
+  
+  await phone.save();
+  res.status(200).json({ message: "Review updated successfully" });
+}
+
+
   module.exports = {
-    signup, emailVerification, login, logout, forgetPassword, resetPassword, getCurrentUser, updatePassword, updateProfile
+    signup, emailVerification, login, logout, forgetPassword, resetPassword, getCurrentUser, updatePassword, updateProfile, removeListing, updateListing, hideComment, addListing
   };
