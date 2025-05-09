@@ -24,6 +24,7 @@ const ProfilePage = () => {
     const [listings, setListings] = useState([]);
     const [comments, setComments] = useState([]);
     const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
+    const [showAddListingForm, setShowAddListingForm] = useState(false);
     const [commentDetails, setCommentDetails] = useState([]);
     
     // Fetch user once on mount
@@ -37,6 +38,7 @@ const ProfilePage = () => {
         .catch(err => console.error(err));
     }, []);
 
+    // Fetch user listings once on mount
     useEffect(() => {
         axios.get("/phones")
             .then(res => {
@@ -46,6 +48,7 @@ const ProfilePage = () => {
             .catch(err => console.error(err));
     }, [user._id]);
 
+    // Fetch user comments once on mount
     useEffect(() => {
         axios.get("/phones")
             .then(res => {
@@ -125,9 +128,10 @@ const ProfilePage = () => {
             });
     };
 
-    //TODO: Handle listing removal
+
+
     const handleListingRemoval = (listing) => {
-        axios.post("/phones/removeListing", { listingId: listing._id })
+        axios.post("/auth/removeListing", { listingId: listing._id })
             .then(response => {
                 if (response.status === 200) {
                     alert("Listing removed successfully.");
@@ -138,30 +142,31 @@ const ProfilePage = () => {
             })
     };
 
-    //TODO: Handle listing enabling/disabling
     const handleListingEnabling = (listing) => {
-        axios.post("/phones/updateListing", { listingId: listing._id, enabled: !listing.enabled })
+        axios.post("/auth/updateListing", { listingId: listing._id })
+            .then(response => {
+                if (response.status === 200) {
+                    alert("Listing updated successfully.");
+                    setListings(prev => prev.map(item => item._id === listing._id ? { ...item, disabled: !item.disabled } : item));
+                } else {   
+                    alert(response.data.message || "Failed to update listing.");
+                }
+            })
     }
 
     // TODO: Handle hiding comments
-    const handleCommentHiding = (comment) => {
-        axios.get("/phones")
-            .then(res => {
-                const fetchedComments = res.data;
-                const userComments = [];
-                const details = [];
-                fetchedComments.forEach(comment => {
-                    comment.reviews.forEach(review => {
-                        if (review.reviewer === user._id) {
-                            userComments.push(review);
-                            details.push(comment);
-                        }
-                    });
-                });
-                setComments(userComments);
-                setCommentDetails(details);
+    const handleCommentHiding = (comment, commentDetails) => {
+        console.log(comment, commentDetails);
+        axios.post("/auth/hideComment", { comment: comment.reviewer, commentDetails: commentDetails })
+            .then(response => {
+                if (response.status === 200) {
+                    alert("Comment updated successfully.");
+                    setComments(prev => prev.map(item => item._id === comment._id ? { ...item, hidden: !item.hidden } : item));
+                } else {   
+                    alert(response.data.message || "Failed to update comment.");
+                }
             })
-            .catch(err => console.error(err));
+        
 
     };
         
@@ -349,28 +354,194 @@ const ProfilePage = () => {
     </form>
     );
 
+    
+    const [newListing, setNewListing] = useState({
+        title: "",
+        brand: "",
+        image: "",
+        stock: "",
+        price: ""
+    });
+
+    const handleNewListingChange = (e) => {
+        const { name, value } = e.target;
+        setNewListing(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleAddListingSubmit = (e) => {
+        e.preventDefault();
+        // Replace the URL and data handling as necessary for your backend API.
+        axios.post("/auth/addListing", newListing)
+            .then(response => {
+                if (response.status === 200) {
+                    alert("Listing added successfully.");
+                    // Add the new listing to listings array
+                    setListings(prev => [...prev, response.data.listing]);
+                    setNewListing({ title: "", brand: "", image: "", stock: "", price: "" });
+                    setShowAddListingForm(false);
+                } else {
+                    alert(response.data.message || "Failed to add listing.");
+                }
+            })
+            .catch(error => {
+                console.error(error);
+                alert("An unexpected error occurred.");
+            });
+    };
+
+    const [selectedListing, setSelectedListing] = useState(null);
+
+    const handleListingClick = (listing) => {
+        setSelectedListing(listing);
+    };
+
+    const renderListingDetails = () => {
+        if (!selectedListing) return null;
+        return (
+            <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-10">
+                <div className="bg-white p-6 rounded-lg shadow-lg relative max-w-lg w-full">
+                    <button
+                        onClick={() => setSelectedListing(null)}
+                        className="absolute top-2 right-2 text-gray-600 hover:text-gray-800"
+                    >
+                        X
+                    </button>
+                    <h3 className="text-xl font-bold mb-4">{selectedListing.title}</h3>
+                    <p className="mb-2"><strong>Brand:</strong> {selectedListing.brand}</p>
+                    <p className="mb-2"><strong>Price:</strong> ${selectedListing.price}</p>
+                    <p className="mb-2"><strong>Stock:</strong> {selectedListing.stock}</p>
+                    <img
+                        src={selectedListing.image}
+                        alt={"phone image"}
+                        className="w-full mt-4 rounded"
+                    />
+                </div>
+            </div>
+        );
+    };
+
     const renderManageListings = () => (
         <div className="space-y-6">
             <button
                 className="w-full px-6 py-3 bg-cyan-600 text-white rounded-lg shadow hover:bg-cyan-700 transition duration-200"
-                onClick={() => alert("Add Listing")}
+                onClick={() => setShowAddListingForm(true)}
             >
                 Add Listing
             </button>
+            {showAddListingForm && (
+                <div className="bg-gray-100 p-6 rounded-lg shadow-md">
+                    <h3 className="text-xl font-semibold mb-4">Add New Listing</h3>
+                    <form onSubmit={handleAddListingSubmit} className="space-y-4">
+                        <div>
+                            <label className="block text-gray-700">Title:</label>
+                            <input
+                                type="text"
+                                name="title"
+                                value={newListing.title}
+                                onChange={handleNewListingChange}
+                                className="w-full px-4 py-2 border rounded"
+                                required
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-gray-700">Brand:</label>
+                            <select
+                                name="brand"
+                                value={newListing.brand}
+                                onChange={handleNewListingChange}
+                                className="w-full px-4 py-2 border rounded"
+                                required
+                            >
+                                <option value="">Select Brand</option>
+                                <option value="Samsung">Samsung</option>
+                                <option value="Apple">Apple</option>
+                                <option value="HTC">HTC</option>
+                                <option value="Huawei">Huawei</option>
+                                <option value="Nokia">Nokia</option>
+                                <option value="LG">LG</option>
+                                <option value="Motorola">Motorola</option>
+                                <option value="Sony">Sony</option>
+                                <option value="BlackBerry">BlackBerry</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-gray-700">Image URL:</label>
+                            <input
+                                type="text"
+                                name="image"
+                                value={newListing.image}
+                                onChange={handleNewListingChange}
+                                className="w-full px-4 py-2 border rounded"
+                                required
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-gray-700">Stock:</label>
+                            <input
+                                type="number"
+                                name="stock"
+                                value={newListing.stock}
+                                onChange={handleNewListingChange}
+                                className="w-full px-4 py-2 border rounded"
+                                min="0"
+                                required
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-gray-700">Price:</label>
+                            <input
+                                type="number"
+                                name="price"
+                                value={newListing.price}
+                                onChange={handleNewListingChange}
+                                className="w-full px-4 py-2 border rounded"
+                                min="0"
+                                step="0.01"
+                                required
+                            />
+                        </div>
+                        <div className="flex space-x-2">
+                            <button
+                                type="submit"
+                                className="px-6 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+                            >
+                                Submit
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setShowAddListingForm(false)}
+                                className="px-6 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            )}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {listings.map((listing, index) => (
-                    <div key={index} className="bg-white rounded-lg shadow p-4 border border-gray-200">
+                    <div
+                        key={index}
+                        className="bg-white rounded-lg shadow p-4 border border-gray-200 cursor-pointer hover:shadow-lg transition duration-200 flex flex-col justify-between"
+                        onClick={() => handleListingClick(listing)}
+                    >
                         <h3 className="text-lg font-semibold text-gray-800">{listing.title}</h3>
                         <div className="mt-4 flex justify-end space-x-2">
                             <button
                                 className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition duration-200"
-                                onClick={() => alert("Enable/Disable Listing")}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleListingEnabling(listing);
+                                }}
                             >
-                                Enable/Disable
+                                {listing.disabled ? "Enable" : "Disable"}
                             </button>
                             <button
                                 className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition duration-200"
-                                onClick={() => alert("Remove Listing")}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleListingRemoval(listing);
+                                }}
                             >
                                 Remove
                             </button>
@@ -378,6 +549,7 @@ const ProfilePage = () => {
                     </div>
                 ))}
             </div>
+            {renderListingDetails()}
         </div>
     );
 
@@ -396,9 +568,13 @@ const ProfilePage = () => {
                         <span className="text-yellow-500 font-bold">
                             Rating: {comment.rating}
                         </span>
+                        <span className="text-gray-500">
+                            {comment.hidden ? "(Hidden)" : ""}
+                        </span>
+
                         <button
                             className="px-4 py-2 text-sm font-semibold text-cyan-500 border border-cyan-500 rounded hover:bg-cyan-500 hover:text-white transition duration-200"
-                            onClick={() => handleCommentHiding(comment)}
+                            onClick={() => handleCommentHiding(comment, commentDetails[index])}
                         >
                             {comment.hidden ? "Show" : "Hide"}
                         </button>

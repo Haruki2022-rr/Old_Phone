@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-// no id requitred
+// no id required
 const ReviewSchema = new mongoose.Schema({
   reviewer: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   rating:   { type: Number },
@@ -13,7 +13,7 @@ const PhoneSchema = new mongoose.Schema({
   brand:    { type: String, required: true, enum: [
                 'Samsung','Apple','HTC','Huawei','Nokia',
                 'LG','Motorola','Sony','BlackBerry'
-             ]},
+            ]},
   image:    { type: String, required: true },       
   stock:    { type: Number, default: 0 },
 //   ObjectId refers to a document in the User model’s collection

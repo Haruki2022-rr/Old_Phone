@@ -3,7 +3,7 @@ const express = require("express");
 // use require to get controller here
 const User = require('../models/User');
 const Phone = require('../models/Phone');
-const { signup, emailVerification, login, logout, resetPassword, forgetPassword, getCurrentUser, updatePassword, updateProfile } = require("../controllers/authController");
+const { signup, emailVerification, login, logout, resetPassword, forgetPassword, getCurrentUser, updatePassword, updateProfile, removeListing, updateListing, hideComment, addListing } = require("../controllers/authController");
 
 // Order Controller
 const { createOrder } = require("../controllers/orderController");
@@ -36,6 +36,16 @@ router.post("/auth/updatePassword", updatePassword);
 
 //updating profile: /api/oldPhoneDeals/auth/updateProfile
 router.post("/auth/updateProfile", updateProfile);
+
+//removing listing: /api/oldPhoneDeals/auth/removeListing
+router.post("/auth/removeListing", removeListing);
+
+//updating listing: /api/oldPhoneDeals/auth/updateListing
+router.post("/auth/updateListing", updateListing);
+
+router.post("/auth/hideComment", hideComment);
+
+router.post("/auth/addListing", addListing);
 
 
 
