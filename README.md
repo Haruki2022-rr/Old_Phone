@@ -15,7 +15,7 @@ node seeder.js
 node index.js
 
 /frontend
-npm run
+npm start
 
 #OldPhoneDeals_TuT10_G4
 

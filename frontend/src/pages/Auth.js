@@ -1,6 +1,6 @@
 //reference: chatGPT -> told how I implemented banckend and gave detailed requirement to generate this code
 
-// import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
@@ -32,12 +32,12 @@ export function AuthPage() {
           password: input.password,
         });
         toast.success("Logged in");
-        navigate("/cart", { replace: true }); // or previous page logic
+        navigate("/profile", { replace: true }); // or previous page logic
       } else if (mode === "signup") {
         await axios.post("/auth/signup", input);
         toast.success("Verification e‑mail sent");
         setMode("login");
-        navigate("/", { replace: true }); // or previous page logic
+        // navigate("/", { replace: true }); // or previous page logic
       } else if (mode === "forgot") {
         await axios.post("/auth/forgetPassword", { email: input.email });
         toast.success("Reset link sent");
@@ -147,7 +147,7 @@ export function AuthPage() {
 //RESET PASSWORD PAGE – accessed via /reset-password/:token
 export function ResetPasswordPage() {
   const navigate = useNavigate();
-  const { token } = useParams();
+  const { token } = useParams(); // get :token part from URL
   const [passwords, setPasswords] = useState({ pw1: "", pw2: "" });
 
   const handleChange = (e) =>
@@ -162,7 +162,7 @@ export function ResetPasswordPage() {
       await axios.post(`/auth/resetPassword/${token}`, {
         password: passwords.pw1,
       });
-      toast.success("Password changed – you can now sign in");
+      toast.success("Password changed");
       navigate("/auth", { replace: true });
     } catch (err) {
       toast.error(err.response?.data?.message || "Error resetting password");
@@ -204,3 +204,37 @@ export function ResetPasswordPage() {
     </div>
   );
 }
+
+// after user clicking the link in a verifycation email -> this page -> direct to previous page(or auth?)
+export function VerifyEmailPage() {
+    const { token } = useParams();
+    const navigate    = useNavigate();
+  
+    // run only the first render unless token or navigate change
+    useEffect(() => {
+      (async () => {
+        try {
+          // callA API veryfyemail
+          const { result } = await axios.get(`/auth/verifyemail/${token}`);
+          if (result.success) {
+            toast.success("Email verified!");
+            // JSON response should include your redirect target
+            navigate("/auth", { replace: true });
+          } else {
+            throw new Error("Verification failed");
+          }
+        } catch (err) {
+          toast.error(err.message);
+          // optionally send them back to /auth anyway
+          navigate("/auth", { replace: true });
+        }
+      })();
+    }, [token, navigate]);
+  
+    return (
+      <div className="max-w-md mx-auto p-6 mt-20 text-center">
+        <ToastContainer />
+        <p className="text-gray-700">Verifying your email…</p>
+      </div>
+    );
+  }

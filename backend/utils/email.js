@@ -68,5 +68,31 @@ const sendResetPasswordEmail = async (user, verificationUrl) => {
   }
 };
 
+const sendConfirmationEmail = async (user) => {
+  const recipients = [
+    new Recipient(user.email, user.name)
+];
 
-module.exports = {sendVerificationEmail, sendResetPasswordEmail};
+  const htmlContent = `
+    <p>Hi ${user.name},</p>
+    <p>Your password has been updated!</p>
+  `;
+
+  const emailParams = new EmailParams()
+    .setFrom(sentFrom)
+    .setTo(recipients)
+    .setReplyTo(sentFrom)
+    .setSubject("Password updated")
+    .setHtml(htmlContent)
+    .setText(`Hi ${user.name}, Your password has been updated!`);
+
+  try {
+    const response = await mailerSend.email.send(emailParams);
+    console.log("Confirmation email sent successfully:", response);
+  } catch (error) {
+    console.error("Error sending confirmation email:", error);
+  }
+};
+
+
+module.exports = {sendVerificationEmail, sendResetPasswordEmail, sendConfirmationEmail};

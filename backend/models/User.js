@@ -4,13 +4,14 @@ const crypto = require('crypto');
 
 const UserSchema = new mongoose.Schema({
   firstname: { type: String, required: true },
-  lastname:  { type: String, required: true },
-  email:     { type: String, required: true, unique: true},
-  password:  { type: String, required: true }, 
+  lastname: { type: String, required: true },
+  email: { type: String, required: true, unique: true},
+  password: { type: String, required: true }, 
   isVerified: { type: Boolean, default: false }, //for email verification
-  emailVerificationToken:          { type: String }, // hashed verification token
-  emailVerificationTokenExpires:   { type: Date }, // when token becomes invalid
-  passwordResetToken:        { type: String },
+  lastLogin: {type: Date},
+  emailVerificationToken: { type: String }, // hashed verification token
+  emailVerificationTokenExpires: { type: Date }, // when token becomes invalid
+  passwordResetToken: { type: String },
   passwordResetTokenExpires: { type: Date },  
 }, {
   timestamps: true

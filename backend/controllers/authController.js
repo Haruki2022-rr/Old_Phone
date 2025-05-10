@@ -1,9 +1,10 @@
 // reference: https://www.freecodecamp.org/news/how-to-secure-your-mern-stack-application/
 // reference: https://rajat-m.medium.com/how-to-set-up-email-verification-using-node-js-and-react-js-376e09b371e2
 const User = require("../models/User");
-const {sendVerificationEmail, sendResetPasswordEmail} = require('../utils/email');
+const {sendVerificationEmail, sendResetPasswordEmail, sendConfirmationEmail} = require('../utils/email');
 const crypto = require("crypto")
 const bcrypt = require("bcryptjs");
+const Phone = require("../models/Phone");
 
 
 async function signup(req, res) {
@@ -16,7 +17,7 @@ async function signup(req, res) {
       if (await User.exists({ email })) {
         return res
             .status(409) //conflict
-            .json({ message: "Acount already exists" });
+            .json({ message: "Account already exists" });
       }
       // if the user is not exist -> create account
       // create document and insert into the User collection. user have a document that has been inserted.
@@ -29,11 +30,9 @@ async function signup(req, res) {
         // Save the user with token and expire
         await newUser.save();
       
-        // Build a verification URL. example:"https://your-domain.com/api/auth/verifyemail/abcdef123456"
+        // Build a verification URL. 
         const verificationUrl = 
-          `${req.protocol}://${req.get("host")}` +
-          `/api/oldPhoneDeals/auth/verifyemail/${verificationToken}`;   
-          //router.get("/auth/verifyemail/:token", verifyEmail);
+          `http://localhost:3000/verifyemail/${verificationToken}`;   
       
         // send the mail
         const fullName = `${newUser.firstname} ${newUser.lastname}`;
@@ -54,8 +53,7 @@ async function signup(req, res) {
   };
 
 
-//When the user clicks the verification link, validates the token
-//router.get("/auth/verifyemail/:token", verifyEmail);
+//When the user clicks the verification link, validates the token <- come form front end
 async function emailVerification(req, res) {
   try {
     // get token from the URL
@@ -82,6 +80,7 @@ async function emailVerification(req, res) {
   
     // the user is verified
     // Mark as verified & clear token fields
+    newUser.lastLogin = new Date();
     newUser.isVerified = true;
     newUser.emailVerificationToken = undefined;
     newUser.emailVerificationTokenExpires = undefined;
@@ -89,13 +88,8 @@ async function emailVerification(req, res) {
   
     // Store the user’s ID in the session
     req.session.userId = newUser._id;
-    res.status(201).json({
+    res.json({
       success: true,
-      message: "User authenticated and session initialized successfully",
-      user: {
-        id: newUser._id,
-        email: newUser.email
-        }
     });
     
   
@@ -133,6 +127,10 @@ async function login(req, res) {
       .json({message:'Incorrect email or password' }) 
     }
     
+    // update login time in db
+    user.lastLogin = new Date();
+    // persist only that change 
+    await user.save();
 
     // Store the user’s ID in the session
     req.session.userId = user._id;
@@ -227,13 +225,46 @@ async function resetPassword(req, res) {
       .json({ message: "Reset token is expired" });
   }
 
-  // set the new password (your pre-save hook will hash it)
+  // set the new password (pre-save hook will hash it)
   user.password = req.body.password;
   user.passwordResetToken = undefined;
   user.passwordResetTokenExpires = undefined;
   await user.save();
 
   res.status(200).json({ success: true, message: "Password reset successful" });
+}
+
+async function updatePassword(req, res) {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ message: "Current password and new password are required" });
+    }
+
+    // Get the current user from session
+    const user = await User.findById(req.session.userId);
+    if (!user) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+
+    // Compare provided current password with the stored hash
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
+      return res.status(403).json({ message: "Current password is incorrect" });
+    }
+
+    // Set the new password (pre-save hook will hash it) and save
+    user.password = newPassword;
+    await user.save();
+
+    const fullName = `${user.firstname} ${user.lastname}`;
+    await sendConfirmationEmail({ name: fullName, email: user.email });
+
+    res.status(200).json({ success: true, message: "Password updated successfully" });
+  } catch (error) {
+    console.error("updatePassword error:", error);
+    res.status(500).json({ message: "Server error while updating password" });
+  }
 }
 
 async function getCurrentUser(req, res) {
@@ -245,6 +276,132 @@ async function getCurrentUser(req, res) {
   res.json({ user });
 }
 
+async function updateProfile(req, res) {
+
+  const { userDetails, hiddenPassword } = req.body;
+  const { firstname, lastname, email } = userDetails;
+  const { password } = hiddenPassword;
+  if (!firstname || !lastname || !email || !password) {
+    return res.status(400).json({ message: "All fields are required" });
+  }
+
+  const user = await User.findById(req.session.userId);
+  if (!user) {
+    return res.status(404).json({ message: "User not found" });
+  }
+
+  const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(403).json({ message: "Current password is incorrect" });
+    }
+  if (!isMatch) {
+    return res.status(403).json({ message: "Entered password is incorrect" });
+  }
+
+  // find user and update
+  
+  user.firstname = firstname;
+  user.lastname = lastname;
+  user.email = email;
+  await user.save();
+
+  res.status(200).json({ message: "User updated successfully" });
+
+}
+
+async function addListing(req, res) {
+  const { title, brand, image, stock, price } = req.body;
+  const user = await User.findById(req.session.userId);
+  if (!user) {
+    return res.status(404).json({ message: "User not found" });
+  }
+  const newListing = new Phone({
+    title,
+    brand,
+    image,
+    stock,
+    price,
+    seller: user._id,
+    reviews: []
+  });
+  await newListing.save();
+  res.status(200).json({ 
+    message: "Listing added successfully", 
+    listing: newListing 
+  });
+}
+
+async function removeListing(req, res) {
+  const { listingId } = req.body;
+  
+  const user = await User.findById(req.session.userId);
+  if (!user) {
+    return res.status(404).json({ message: "User not found" });
+  }
+
+  const listing = await Phone.findById(listingId);
+  console.log("listing removed: \n", listing);
+  if (!listing) {
+    return res.status(404).json({ message: "Listing not found" });
+  }
+
+  // Remove the listing from the database
+  await Phone.findByIdAndDelete(listingId);
+
+  res.status(200).json({ message: "Listing removed successfully" });
+}
+
+async function updateListing(req, res) {
+  const { listingId } = req.body;
+  
+  const user = await User.findById(req.session.userId);
+  if (!user) {
+    return res.status(404).json({ message: "User not found" });
+  }
+
+  const listing = await Phone.findById(listingId);
+  console.log("listing updated: \n", listing);
+  if (!listing) {
+    return res.status(404).json({ message: "Listing not found" });
+  }
+
+  listing.disabled = !listing.disabled;
+  await listing.save();
+
+  res.status(200).json({ message: "Listing updated successfully" });
+}
+
+async function hideComment(req, res) {
+  const { comment, commentDetails } = req.body; // comment is the reviewer id, commentDetails is the phone document
+  const user = await User.findById(req.session.userId);
+  if (!user) {
+    return res.status(404).json({ message: "User not found" });
+  }
+  
+  // Find the phone document by its _id from commentDetails
+  const phone = await Phone.findById(commentDetails._id);
+  if (!phone) {
+    return res.status(404).json({ message: "Phone not found" });
+  }
+  
+  // Locate the review with reviewer id matching comment and mark it as hidden
+  let reviewFound = false;
+  phone.reviews.forEach(review => {
+    if (review.reviewer.toString() === comment) {
+      review.hidden = !review.hidden; // Toggle the hidden status
+      reviewFound = true;
+    }
+  });
+  
+  if (!reviewFound) {
+    return res.status(404).json({ message: "Review not found" });
+  }
+  
+  await phone.save();
+  res.status(200).json({ message: "Review updated successfully" });
+}
+
+
   module.exports = {
-    signup, emailVerification, login, logout, forgetPassword, resetPassword, getCurrentUser
+    signup, emailVerification, login, logout, forgetPassword, resetPassword, getCurrentUser, updatePassword, updateProfile, removeListing, updateListing, hideComment, addListing
   };
