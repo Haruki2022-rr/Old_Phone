@@ -1,4 +1,6 @@
-import React, { useState } from "react";
+//reference: chatGPT -> told how I implemented banckend and gave detailed requirement to generate this code
+
+// import React, { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
@@ -7,35 +9,38 @@ import "react-toastify/dist/ReactToastify.css";
 
 // AUTH PAGE for Login, Sign‑Up, Forgot password
 export function AuthPage() {
-  const navigate = useNavigate();
-  const [mode, setMode] = useState("login"); // login | signup | forgot
-  const [form, setForm] = useState({
+  const navigate = useNavigate(); // navicate to another page 
+  const [mode, setMode] = useState("login"); // which mode we are on among login(default). signuo. reset 
+  const [input, setInput] = useState({
     firstname: "",
     lastname: "",
     email: "",
     password: "",
   });
 
+  // when input changes, state changes
   const handleChange = (e) =>
-    setForm((p) => ({ ...p, [e.target.name]: e.target.value }));
+    setInput((p) => ({ ...p, [e.target.name]: e.target.value }));
 
+  // run when a submit button clicked 
   async function handleSubmit(e) {
-    e.preventDefault();
+    e.preventDefault(); // stop browser's default full page refresh
     try {
       if (mode === "login") {
         await axios.post("/auth/login", {
-          email: form.email,
-          password: form.password,
+          email: input.email,
+          password: input.password,
         });
-        toast.success("Logged in!");
+        toast.success("Logged in");
         navigate("/cart", { replace: true }); // or previous page logic
       } else if (mode === "signup") {
-        await axios.post("/auth/signup", form);
-        toast.success("Verification e‑mail sent!");
+        await axios.post("/auth/signup", input);
+        toast.success("Verification e‑mail sent");
         setMode("login");
+        navigate("/", { replace: true }); // or previous page logic
       } else if (mode === "forgot") {
-        await axios.post("/auth/forgetPassword", { email: form.email });
-        toast.success("Reset link sent!");
+        await axios.post("/auth/forgetPassword", { email: input.email });
+        toast.success("Reset link sent");
         setMode("login");
       }
     } catch (err) {
@@ -45,7 +50,7 @@ export function AuthPage() {
 
   return (
     <div className="max-w-md mx-auto mt-10 p-6 bg-white rounded-lg shadow-md">
-      <ToastContainer />
+      <ToastContainer />  {/* placeholder for toast notify */}
       <h1 className="text-2xl font-bold text-center text-gray-800 mb-6">
         {mode === "login" && "Sign In"}
         {mode === "signup" && "Create Account"}
@@ -55,9 +60,9 @@ export function AuthPage() {
       {/* tabs */}
       <div className="flex justify-center mb-4 space-x-4">
         <button
-          onClick={() => setMode("login")}
+          onClick={() => setMode("login")} // rerender AuthPage()
           className={`px-3 py-1 rounded-lg text-sm font-medium ${
-            mode === "login" ? "bg-cyan-500 text-white" : "bg-gray-100"
+            mode === "login" ? "bg-cyan-500 text-white" : "bg-gray-100" // ternary ope
           }`}
         >
           Login
@@ -76,18 +81,19 @@ export function AuthPage() {
             mode === "forgot" ? "bg-cyan-500 text-white" : "bg-gray-100"
           }`}
         >
-          Forgot
+          Reset Password
         </button>
       </div>
 
       <form className="space-y-4" onSubmit={handleSubmit}>
+        {/* only render input field for firstname and lastname when mode is signup */}
         {mode === "signup" && (
           <>
             <input
               type="text"
               name="firstname"
               placeholder="First Name"
-              value={form.firstname}
+              value={input.firstname}
               onChange={handleChange}
               className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-cyan-500"
               required
@@ -96,18 +102,19 @@ export function AuthPage() {
               type="text"
               name="lastname"
               placeholder="Last Name"
-              value={form.lastname}
+              value={input.lastname}
               onChange={handleChange}
               className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-cyan-500"
               required
             />
           </>
         )}
+        {/* email is always required regardless of mode */}
         <input
           type="email"
           name="email"
           placeholder="Email"
-          value={form.email}
+          value={input.email}
           onChange={handleChange}
           className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-cyan-500"
           required
@@ -117,7 +124,7 @@ export function AuthPage() {
             type="password"
             name="password"
             placeholder="Password"
-            value={form.password}
+            value={input.password}
             onChange={handleChange}
             className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-cyan-500"
             required
@@ -136,9 +143,8 @@ export function AuthPage() {
   );
 }
 
-/* ------------------------------------------------------------------
-   RESET PASSWORD PAGE – accessed via /reset-password/:token
--------------------------------------------------------------------*/
+
+//RESET PASSWORD PAGE – accessed via /reset-password/:token
 export function ResetPasswordPage() {
   const navigate = useNavigate();
   const { token } = useParams();
@@ -157,7 +163,7 @@ export function ResetPasswordPage() {
         password: passwords.pw1,
       });
       toast.success("Password changed – you can now sign in");
-      navigate("/login", { replace: true });
+      navigate("/auth", { replace: true });
     } catch (err) {
       toast.error(err.response?.data?.message || "Error resetting password");
     }

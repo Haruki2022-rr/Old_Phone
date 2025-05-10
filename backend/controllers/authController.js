@@ -187,10 +187,10 @@ async function forgetPassword(req, res) {
     
       // url to front end: reset-password page
       const resetPasswordUrl = 
-        `${req.protocol}://${req.get("host")}` +
+        `${req.protocol}://localhost:3000` +
         `/reset-password/${token}`;   
-        //router.get("/auth/resetPasswordLink/:token", resetPasswordLink);
-    
+
+      
       // send the mail
       const fullName = `${user.firstname} ${user.lastname}`;
       await sendResetPasswordEmail({ name: fullName, email: user.email }, resetPasswordUrl);
@@ -198,7 +198,7 @@ async function forgetPassword(req, res) {
       // Respond to the client
       res.status(201).json({
         success: true,
-        message: "Reser password email sent",
+        message: "Reset password email sent",
       });
     
     } else {
