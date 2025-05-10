@@ -84,3 +84,12 @@ exports.enablePhone = async (req, res) => {
         res.status(500).json({ error: 'Failed to enable phone listing' });
     }
 }
+
+exports.getPhonesByUser = async (req, res) => {
+    try {
+      const phones = await Phone.find({ seller: req.params.userId });
+      res.json(phones);
+    } catch (err) {
+      res.status(500).json({ error: 'Failed to fetch user phone listings' });
+    }
+  };
