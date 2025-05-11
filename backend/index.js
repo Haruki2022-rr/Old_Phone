@@ -35,10 +35,8 @@ app.use(
 );
 
 // at the URL path /images/<filename>
-app.use(
-  '/images',
-  express.static(path.join(__dirname, 'data', 'phone_default_images'))
-);
+
+app.use('/images', express.static(path.join(__dirname, 'data', 'phone_default_images')));
 
 // MongoDB Connection
 const db_uri = process.env.MONGO_URI;
@@ -51,11 +49,13 @@ const mainRoutes = require('./routes/mainRoutes');
 //const reviewRoutes = require('./routes/reviewRoutes');
 const phoneRoutes = require('./routes/phoneRoutes');
 const userRoutes = require('./routes/userRoutes');
+const cartRoutes = require('./routes/cartRoutes');
 
-app.use('/api', mainRoutes);
+app.use('/api/cart', cartRoutes);
+app.use('/api/oldPhoneDeals', mainRoutes);
 //app.use('/api', reviewRoutes);
-app.use('/api', phoneRoutes);
-app.use('/api', userRoutes);
+app.use('/api/oldPhoneDeals', phoneRoutes);
+app.use('/api/oldPhoneDeals', userRoutes);
 
 // Route to routes/oldPhoneDeals.routes.js
 app.use("/api/oldPhoneDeals", oldPhoneDeals);

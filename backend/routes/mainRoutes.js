@@ -3,6 +3,8 @@ const router = express.Router();
 
 const mainController = require('../controllers/mainController');
 
+
+console.log(' MainRoutes loaded')
 // Route to get phones with the least stock (sold out soon)
 
 router.get('/phones/soldoutsoon', mainController.getSoldOutSoonPhones);
@@ -17,3 +19,4 @@ router.get('/phones/search', mainController.searchPhones);
 router.get('/phones/:id', mainController.getPhoneDetails);
 
 module.exports = router;
+

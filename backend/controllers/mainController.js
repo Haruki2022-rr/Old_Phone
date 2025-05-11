@@ -22,12 +22,12 @@ try {
 
     const ratedPhones = phones
         .map(phone => {
-            const validReviews = phones.reviews || [];
+            const validReviews = phone.reviews || [];
             const totalRatings = validReviews.reduce((sum, r) => sum + r.rating, 0);
             const averageRating = validReviews.length > 0 ? totalRatings / validReviews.length : 0;
             return { ...phone, averageRating, reviewCount: validReviews.length };
         })
-        .filter(p => p.r.review >= 2)
+        .filter(p => p.reviewCount >= 2)
         .sort((a,b) => b.averageRating - a.averageRating)
         .slice(0,5);
 
@@ -40,6 +40,9 @@ try {
 // Search phones by title (with optional brand and maxPrice filters)
 exports.searchPhones = async (req, res) => {
     try {
+
+        // debug Log
+        console.log(' SearchPhones triggered with query:', req.query);
         const { title, brand, maxPrice} = req.query;
 
         const query = { disabled: false};

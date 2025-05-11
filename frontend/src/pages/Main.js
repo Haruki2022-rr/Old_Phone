@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 
-const Main = () => {
+import './tailwind.css'
+
+const MainPage = () => {
   const [soldOutSoon, setSoldOutSoon] = useState([]);
   const [bestSellers, setBestSellers] = useState([]);
   const [searchResults, setSearchResults] = useState([]);
@@ -9,20 +12,20 @@ const Main = () => {
   const [maxPrice, setMaxPrice] = useState('');
 
   useEffect(() => {
-    fetch('/api/phones/soldoutsoon')
+    fetch('http://localhost:5050/api/oldPhoneDeals/phones/soldoutsoon')
       .then(res => res.json())
       .then(setSoldOutSoon);
 
-    fetch('/api/phones/bestsellers')
+    fetch('http://localhost:5050/api/oldPhoneDeals/phones/bestsellers')
       .then(res => res.json())
       .then(setBestSellers);
   }, []);
 
   const handleSearch = () => {
-    let url = `/api/phones/search?title=${searchQuery}`;
+    let url = `http://localhost:5050/api/oldPhoneDeals/phones/search?title=${searchQuery}`;
     if (brand) url += `&brand=${brand}`;
     if (maxPrice) url += `&maxPrice=${maxPrice}`;
-
+    console.log("Fetching:", url);
     fetch(url)
       .then(res => res.json())
       .then(setSearchResults);
@@ -30,8 +33,17 @@ const Main = () => {
 
   const PhoneCard = ({ phone }) => (
     <div className="border rounded-lg p-4 shadow-md text-center">
-      <img src={phone.image} alt={phone.title} className="w-40 h-auto mx-auto mb-2" />
+      <Link to={`/phones/${phone._id}`}>
+      <img
+       src={`http://localhost:5050${phone.image}`}
+       alt={phone.title}
+       className="w-40 h-auto mx-auto mb-2"
+       onError={(e) =>{
+        e.target.src='/fallback.jpeg'; //optional fallback image
+       }}
+       />
       <h3 className="font-semibold">{phone.title}</h3>
+      </Link>
       <p className="text-gray-600">${phone.price}</p>
     </div>
   );
@@ -54,18 +66,30 @@ const Main = () => {
               <option key={b} value={b}>{b}</option>
             ))}
           </select>
+
+          <div className = "flex flex-col items-center">
+            <span className="text-sm mb-1 h-5">${maxPrice || 'Max'}</span>
           <input
-            type="number"
-            placeholder="Max Price"
+            type="range"
+            min = "0"
+            max = "500"
+            step= "1"
             value={maxPrice}
             onChange={(e) => setMaxPrice(e.target.value)}
-            className="border p-2 rounded"
+            className="w-40"
           />
+           <div className="flex justify-between w-full text-xs text-gray-400">
+          <span>$0</span>
+          <span>$500</span>
+        </div>
+      </div>
+      <div className="self-end">
           <button onClick={handleSearch} className="bg-cyan-500 text-white px-4 py-2 rounded hover:bg-cyan-600">
             Search
           </button>
         </div>
       </div>
+    </div>
 
       {/* Search Results */}
       {searchResults.length > 0 && (
@@ -102,4 +126,6 @@ const Main = () => {
   );
 };
 
-export default Main;
+export default MainPage;
+
+
