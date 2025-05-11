@@ -14,7 +14,6 @@ export default function App() {
           <Routes>
             <Route path="/" element={<Layout />}>
             <Route index element={<Main />} />
-            <Route path="phones/:id" element={<PhoneDetail />} />
             <Route path="auth" element={<AuthPage />} />
             <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
             <Route path="verifyemail/:token" element={<VerifyEmailPage />} />
