@@ -53,6 +53,16 @@ mongoose
     .then(() => console.log('MongoDB connected'))
     .catch(err => console.error('MongoDB connection error:', err));
 
+const mainRoutes = require('./routes/mainRoutes');
+//const reviewRoutes = require('./routes/reviewRoutes');
+const phoneRoutes = require('./routes/phoneRoutes');
+const userRoutes = require('./routes/userRoutes');
+
+app.use('/api/oldPhoneDeals', mainRoutes);
+//app.use('/api', reviewRoutes);
+app.use('/api/oldPhoneDeals', phoneRoutes);
+app.use('/api/oldPhoneDeals', userRoutes);
+
 // Route to routes/oldPhoneDeals.routes.js
 app.use("/api/oldPhoneDeals", oldPhoneDeals);
 
