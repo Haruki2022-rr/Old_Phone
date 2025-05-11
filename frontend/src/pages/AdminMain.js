@@ -55,16 +55,6 @@ const AdminMain = () => {
     review.listingTitle.toLowerCase().includes(reviewSearchTerm.toLowerCase())
   );
 
-  useEffect(() => {
-    axios.get("/admin/me")
-        .then(res => {
-            console.log(res.data);
-        })
-        .catch(err => {
-            console.error(err);
-            window.location.href = "/"; // Redirect to home page
-        });
-    }, []);
 
   useEffect(() => {
     axios.get("/users")
@@ -93,7 +83,7 @@ const AdminMain = () => {
   // Action Handlers (placeholders - implement API calls and state updates)
   const handleEditUser = (e) => {
     e.preventDefault();
-    console.log(editID, editFirstName, editLastName, editEmail);
+
 
 
     axios.post("/admin/adminUpdateUser", { userID: editID, userFirst: editFirstName, userLast: editLastName, userEmail: editEmail })
@@ -101,7 +91,13 @@ const AdminMain = () => {
                 if (response.status === 200) {
                     alert("Profile updated successfully.");
                     setEditingUser(null);
-                    
+                    setUsers(prevUsers =>
+                      prevUsers.map(u =>
+                        u._id === editID
+                          ? { ...u, firstname: editFirstName, lastname: editLastName, email: editEmail }
+                          : u
+                      )
+                    );
                 } else {
                     alert(response.data.message || "Failed to update profile.");
                 }
@@ -120,14 +116,14 @@ const AdminMain = () => {
 
   };
 
-  const handleDeleteUser = (userId) => {
-    if (userId === 'superadmin_id_placeholder') { // Prevent deleting super admin
-        showMessage('Cannot delete the super admin account.', 'error');
-        return;
-    }
-    if (window.confirm('Are you sure you want to delete user ' + userId + '? This action cannot be undone.')) {
-      setUsers(users.filter(u => u._id !== userId));
-      showMessage(`User ${userId} deleted.`, 'success');
+  const handleDeleteUser = (userID) => {
+    //find userId name
+    const user = users.find(u => u._id === userID);
+    const userName = user.firstname + " " + user.lastname;
+    if (window.confirm('Are you sure you want to delete user ' + userName + '? This action cannot be undone.')) {
+      axios.post('/admin/deleteUser', { userID })
+      setUsers(users.filter(u => u._id !== userID));
+      showMessage(`User ${userName} deleted.`, 'success');
     }
   };
 
