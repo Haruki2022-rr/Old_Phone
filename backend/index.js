@@ -49,9 +49,7 @@ const mainRoutes = require('./routes/mainRoutes');
 //const reviewRoutes = require('./routes/reviewRoutes');
 const phoneRoutes = require('./routes/phoneRoutes');
 const userRoutes = require('./routes/userRoutes');
-const cartRoutes = require('./routes/cartRoutes');
 
-app.use('/api/cart', cartRoutes);
 app.use('/api/oldPhoneDeals', mainRoutes);
 //app.use('/api', reviewRoutes);
 app.use('/api/oldPhoneDeals', phoneRoutes);
