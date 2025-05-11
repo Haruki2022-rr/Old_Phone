@@ -6,7 +6,10 @@ const Phone = require('../models/Phone');
 const { signup, emailVerification, login, logout, resetPassword, forgetPassword, getCurrentUser, updatePassword, updateProfile, removeListing, updateListing, hideComment, addListing } = require("../controllers/authController");
 
 // Order Controller
-const { createOrder } = require("../controllers/orderController");
+const { createOrder,
+        getAllOrders,
+        getOrderById,
+        getOrdersByUser} = require("../controllers/orderController");
 const Order = require("../models/Order");
 
 // add method to use controller function here
@@ -62,7 +65,17 @@ router.get('/phones', async (req, res) => {
     res.json(phones);
 });
 
+// create new order from cart: /api/oldPhoneDeals/orders
 router.post('/orders', createOrder);
+
+// get all orders (admin only): /api/oldPhoneDeals/orders
+router.get('/orders', getAllOrders);
+
+// get order by ID (admin only): /api/oldPhoneDeals/orders/:id
+router.get('/orders/:id', getOrderById);
+
+// get all orders of a specific user: /api/oldPhoneDeals/orders/by-user/:userId
+router.get('/orders/by-user/:userId', getOrdersByUser);
 
 
 
