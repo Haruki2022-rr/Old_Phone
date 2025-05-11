@@ -121,9 +121,24 @@ const AdminMain = () => {
     const user = users.find(u => u._id === userID);
     const userName = user.firstname + " " + user.lastname;
     if (window.confirm('Are you sure you want to delete user ' + userName + '? This action cannot be undone.')) {
-      axios.post('/admin/deleteUser', { userID })
-      setUsers(users.filter(u => u._id !== userID));
-      showMessage(`User ${userName} deleted.`, 'success');
+      axios.post('/admin/adminDeleteUser', { userID })
+        .then(response => {
+          if (response.status === 200) {
+            alert("User deleted successfully.");
+            setUsers(users.filter(u => u._id !== userID));
+            showMessage(`User ${userName} deleted.`, 'success');
+          } else {
+            alert(response.data.message || "Failed to delete user.");
+          }
+        })
+        .catch(error => {
+          if (error.response) {
+            alert(error.response.data.message);
+          } else {
+            alert("An unexpected error occurred.");
+          }
+        });
+      
     }
   };
 

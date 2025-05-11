@@ -63,7 +63,7 @@ async function adminDeleteUser(req, res) {
                 .status(404)
                 .json({ message: "User not found in database" });
         }
-        await user.remove();
+        await User.findByIdAndDelete(userID);
 
         console.log("Deleted user: ", user);
 
