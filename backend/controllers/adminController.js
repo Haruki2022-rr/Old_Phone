@@ -1,11 +1,11 @@
-import bcrypt from 'bcryptjs';
+const bcrypt = require("bcryptjs");
 
 const admin = {
     email: "admin@gmail.com",
     password: bcrypt.hashSync('0000', 10)
   };
   
-export async function adminAuthentication(req, res) {
+async function adminAuthentication(req, res) {
     try {
         const { email, password } = req.body;
         if(!email || !password ){
@@ -37,3 +37,5 @@ export async function adminAuthentication(req, res) {
         console.error(error);
     }
 }
+
+module.exports = { adminAuthentication };

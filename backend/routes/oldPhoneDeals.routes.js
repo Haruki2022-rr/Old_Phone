@@ -56,7 +56,7 @@ router.get("/auth/currentUser", getCurrentUser);
 router.post("/admin/authentication", adminAuthentication);
 
 // to access session date from frontend
-router.get('/admin/me', (req, res) => {
+router.get('/admin/me', requireAuth, (req, res) => {
     res.json({
       adminId: req.session.adminId,
       isAdmin: req.session.isAdmin
