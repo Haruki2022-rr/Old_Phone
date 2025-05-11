@@ -411,8 +411,8 @@ const ProfilePage = () => {
                     <p className="mb-2"><strong>Price:</strong> ${selectedListing.price}</p>
                     <p className="mb-2"><strong>Stock:</strong> {selectedListing.stock}</p>
                     <img
-                        src={selectedListing.image}
-                        alt={"phone image"}
+                        src={`http://localhost:5050${selectedListing.image}`}
+                        alt={selectedListing.title}
                         className="w-full mt-4 rounded"
                     />
                 </div>
@@ -445,24 +445,14 @@ const ProfilePage = () => {
                         </div>
                         <div>
                             <label className="block text-gray-700">Brand:</label>
-                            <select
+                            <input
+                                type="text"
                                 name="brand"
                                 value={newListing.brand}
                                 onChange={handleNewListingChange}
                                 className="w-full px-4 py-2 border rounded"
                                 required
-                            >
-                                <option value="">Select Brand</option>
-                                <option value="Samsung">Samsung</option>
-                                <option value="Apple">Apple</option>
-                                <option value="HTC">HTC</option>
-                                <option value="Huawei">Huawei</option>
-                                <option value="Nokia">Nokia</option>
-                                <option value="LG">LG</option>
-                                <option value="Motorola">Motorola</option>
-                                <option value="Sony">Sony</option>
-                                <option value="BlackBerry">BlackBerry</option>
-                            </select>
+                            />
                         </div>
                         <div>
                             <label className="block text-gray-700">Image URL:</label>
