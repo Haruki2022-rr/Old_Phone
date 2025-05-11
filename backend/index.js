@@ -41,10 +41,8 @@ module.exports = function requireAuth(req, res, next) {
 };
 
 // at the URL path /images/<filename>
-app.use(
-  '/images',
-  express.static(path.join(__dirname, 'data', 'phone_default_images'))
-);
+
+app.use('/images', express.static(path.join(__dirname, 'data', 'phone_default_images')));
 
 // MongoDB Connection
 const db_uri = process.env.MONGO_URI;
@@ -52,6 +50,18 @@ mongoose
   .connect(db_uri)
   .then(() => console.log('MongoDB connected'))
   .catch(err => console.error('MongoDB connection error:', err));
+
+const mainRoutes = require('./routes/mainRoutes');
+//const reviewRoutes = require('./routes/reviewRoutes');
+const phoneRoutes = require('./routes/phoneRoutes');
+const userRoutes = require('./routes/userRoutes');
+const cartRoutes = require('./routes/cartRoutes');
+
+app.use('/api/cart', cartRoutes);
+app.use('/api/oldPhoneDeals', mainRoutes);
+//app.use('/api', reviewRoutes);
+app.use('/api/oldPhoneDeals', phoneRoutes);
+app.use('/api/oldPhoneDeals', userRoutes);
 
 // Route to routes/oldPhoneDeals.routes.js
 app.use("/api/oldPhoneDeals", oldPhoneDeals);
