@@ -20,10 +20,18 @@ const PhoneDetail = () => {
     if (!phone) return <div>Loading...</div>;
 
     const reviewsToShow = phone.reviews?.slice(0, visibleReviews) || [];
-
-    // Find current quantity of this item in cart
     const existingItem = cartItems.find(item => item.phoneId === phone._id);
     const currentCartQty = existingItem ? existingItem.quantity : 0;
+    const remainingStock = phone.stock - currentCartQty;
+
+    const handleConfirmAdd = () => {
+        if (quantity > remainingStock) {
+            alert(`Only ${remainingStock} left in stock.`);
+            return;
+        }
+        addToCart(phone, quantity, phone.price);
+        setShowQuantityInput(false);
+    };
 
     return (
         <div className="max-w-3xl mx-auto p-6 bg-white shadow rounded">
@@ -35,28 +43,31 @@ const PhoneDetail = () => {
             <h2 className="text-2xl font-bold mb-2">{phone.title}</h2>
             <p className="text-gray-600 mb-1">Brand: {phone.brand}</p>
             <p className="text-gray-600 mb-1">Price: ${phone.price}</p>
-            <p className="text-gray-600 mb-1">Stock: {phone.stock}</p>
+            <p className="text-gray-600 mb-1">Stock: {remainingStock > 0 ? remainingStock : 'Out of stock'}</p>
             <p className="text-gray-600 mb-1">Seller: {phone.seller?.firstname} {phone.seller?.lastname}</p>
 
-            {/* Add to Cart Section */}
             <div className="mt-6">
-                <p className="text-sm text-gray-600 mb-2">Already in Cart: {currentCartQty}</p>
-
-                {showQuantityInput ? (
+                {currentCartQty > 0 && (
+                    <p className="text-sm text-yellow-600 mb-1">
+                        In cart: {currentCartQty}
+                    </p>
+                )}
+                {remainingStock <= 0 ? (
+                    <p className="text-sm text-red-500 font-semibold mb-2">
+                        Out of stock
+                    </p>
+                ) : showQuantityInput ? (
                     <div className="flex items-center gap-3">
                         <input
                             type="number"
                             min="1"
-                            max={phone.stock}
+                            max={remainingStock}
                             value={quantity}
                             onChange={(e) => setQuantity(Number(e.target.value))}
                             className="border p-2 w-20 rounded"
                         />
                         <button
-                            onClick={() => {
-                                addToCart(phone, quantity, phone.price);
-                                setShowQuantityInput(false);
-                            }}
+                            onClick={handleConfirmAdd}
                             className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
                         >
                             Confirm
@@ -78,7 +89,6 @@ const PhoneDetail = () => {
                 )}
             </div>
 
-            {/* Reviews Section */}
             <h3 className="text-xl font-semibold mt-8 mb-2">Reviews</h3>
             <div className="space-y-4">
                 {reviewsToShow.map((review, index) => (
