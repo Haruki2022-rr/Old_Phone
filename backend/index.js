@@ -27,6 +27,7 @@ app.use(
     secret: "topSecret",
     resave: true,
     saveUninitialized: true,
+    rolling: true, // reset cookie & store TTL on every response
     cookie: {
       httpOnly: true,
       maxAge: 7 * 24 * 60 * 60 * 1000

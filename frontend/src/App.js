@@ -3,9 +3,12 @@ import Layout from "./pages/Layout";
 import Main   from "./pages/Main";
 import Checkout from "./pages/Checkout";
 import Profile from "./pages/Profile";
+import AdminAuthPage from "./pages/AdminAuth"
+import AdminMain from "./pages/AdminMain"
 import {AuthPage, ResetPasswordPage, VerifyEmailPage}  from "./pages/Auth";
 import "./pages/tailwind.css";
 import { CartProvider } from './context/CartContext';
+import RequireAdminAuth from "./components/RequireAdminAuth";
 
 export default function App() {
   return (
@@ -13,13 +16,19 @@ export default function App() {
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Layout />}>
-            <Route index element={<Main />} />
-            <Route path="auth" element={<AuthPage />} />
-            <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
-            <Route path="verifyemail/:token" element={<VerifyEmailPage />} />
-            <Route path="checkout" element={<Checkout />} />
+              <Route index element={<Main />} />
+              <Route path="auth" element={<AuthPage />} />
+              <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
+              <Route path="verifyemail/:token" element={<VerifyEmailPage />} />
+              <Route path="checkout" element={<Checkout />} />
               <Route path="profile" element={<Profile />} />
-          </Route>
+            </Route>
+
+            <Route path="adminAuth" element={<AdminAuthPage />} />
+            <Route path="admin" element={<RequireAdminAuth />}>   {/* /admin/* will require automatically authentication */}
+              <Route path="main" element={<AdminMain />} /> {/* /admin/main *}
+              {/* route for admin here */}
+            </Route>
         </Routes>
         </BrowserRouter>
       </CartProvider>
