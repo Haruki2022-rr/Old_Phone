@@ -14,49 +14,49 @@ const session = require("express-session");
 
 //allow cross origin from port 3000 to 5000/5050
 app.use(cors(
-  {origin: "http://localhost:3000",
-  methods: ["GET","POST","PUT","DELETE"],  // React’s dev server
-  credentials: true  }
+    {origin: "http://localhost:3000",
+        methods: ["GET","POST","PUT","DELETE"],  // React’s dev server
+        credentials: true  }
 ));
 
 app.use(express.json());
 
 // session
 app.use(
-  session({
-    secret: "topSecret",
-    resave: true,
-    saveUninitialized: true,
-    cookie: {
-      httpOnly: true,
-      maxAge: 7 * 24 * 60 * 60 * 1000
-    }
-  })
+    session({
+        secret: "topSecret",
+        resave: true,
+        saveUninitialized: true,
+        cookie: {
+            httpOnly: true,
+            maxAge: 7 * 24 * 60 * 60 * 1000
+        }
+    })
 );
 
 // to check if user has logged in -> can be used in routes
 module.exports = function requireAuth(req, res, next) {
-  if (req.session && req.session.userId) return next();
-  return res.status(401).json({ message: "Not authenticated" });
+    if (req.session && req.session.userId) return next();
+    return res.status(401).json({ message: "Not authenticated" });
 };
 
 // at the URL path /images/<filename>
 app.use(
-  '/images',
-  express.static(path.join(__dirname, 'data', 'phone_default_images'))
+    '/images',
+    express.static(path.join(__dirname, 'data', 'phone_default_images'))
 );
 
 // MongoDB Connection
 const db_uri = process.env.MONGO_URI;
 mongoose
-  .connect(db_uri)
-  .then(() => console.log('MongoDB connected'))
-  .catch(err => console.error('MongoDB connection error:', err));
+    .connect(db_uri)
+    .then(() => console.log('MongoDB connected'))
+    .catch(err => console.error('MongoDB connection error:', err));
 
 // Route to routes/oldPhoneDeals.routes.js
 app.use("/api/oldPhoneDeals", oldPhoneDeals);
 
 // Start Server
 app.listen(PORT, () => {
- console.log(`Server running on port ${PORT}`);
+    console.log(`Server running on port ${PORT}`);
 });
