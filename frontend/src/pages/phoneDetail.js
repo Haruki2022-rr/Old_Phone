@@ -1,13 +1,16 @@
 import React, { useEffect, useState, useContext } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { CartContext } from '../context/CartContext';
+import axios from 'axios';
 
 const PhoneDetail = () => {
     const { id } = useParams();
+    const navigate = useNavigate();
     const [phone, setPhone] = useState(null);
     const [visibleReviews, setVisibleReviews] = useState(3);
     const [quantity, setQuantity] = useState(1);
     const [showQuantityInput, setShowQuantityInput] = useState(false);
+    const [user, setUser] = useState(null);
     const { cartItems, addToCart } = useContext(CartContext);
 
     useEffect(() => {
@@ -17,12 +20,27 @@ const PhoneDetail = () => {
             .catch(err => console.error('Failed to fetch phone details:', err));
     }, [id]);
 
+    useEffect(() => {
+        axios.get("http://localhost:5050/api/oldPhoneDeals/auth/currentUser", { withCredentials: true })
+            .then(res => setUser(res.data.user))
+            .catch(() => setUser(null));
+    }, []);
+
     if (!phone) return <div>Loading...</div>;
 
     const reviewsToShow = phone.reviews?.slice(0, visibleReviews) || [];
     const existingItem = cartItems.find(item => item.phoneId === phone._id);
     const currentCartQty = existingItem ? existingItem.quantity : 0;
     const remainingStock = phone.stock - currentCartQty;
+
+    const handleAddToCartClick = () => {
+        if (!user) {
+            alert("You must be logged in to add items to cart.");
+            navigate("/auth");
+            return;
+        }
+        setShowQuantityInput(true);
+    };
 
     const handleConfirmAdd = () => {
         if (quantity > remainingStock) {
@@ -81,7 +99,7 @@ const PhoneDetail = () => {
                     </div>
                 ) : (
                     <button
-                        onClick={() => setShowQuantityInput(true)}
+                        onClick={handleAddToCartClick}
                         className="bg-cyan-500 text-white px-4 py-2 rounded hover:bg-cyan-600"
                     >
                         Add to Cart
