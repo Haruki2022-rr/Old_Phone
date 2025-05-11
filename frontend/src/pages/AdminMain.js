@@ -142,6 +142,19 @@ const AdminMain = () => {
     }
   };
 
+const handleViewListings = (userID) => {
+  const userListings = listings.filter(listing => listing.seller === userID);
+  if (userListings.length === 0) {
+    alert("This user has no listings.");
+  } else {
+    const listingsInfo = userListings
+      .map(listing => `Title: ${listing.title}\nBrand: ${listing.brand}\nPrice: $${listing.price}\nStock: ${listing.stock}`)
+      .join("\n\n");
+    alert(`Listings for this user:\n\n${listingsInfo}`);
+  }
+};
+
+
   const handleEditListing = (listingId) => {
     const newTitle = prompt("Enter new title for listing " + listingId + ":");
     if (newTitle) {
@@ -270,7 +283,7 @@ const AdminMain = () => {
                         <button onClick={() => handleDeleteUser(user._id)} className="text-red-600 hover:text-red-900 mr-3">
                           Delete
                         </button>
-                        <button onClick={() => alert(`View listings for ${user.firstname} ${user.lastname}`)} className="text-green-600 hover:text-green-900 mr-3">
+                        <button onClick={() => handleViewListings(user._id)} className="text-green-600 hover:text-green-900 mr-3">
                           Listings
                         </button>
                         <button onClick={() => alert(`View reviews by ${user.firstname} ${user.lastname}`)} className="text-purple-600 hover:text-purple-900">
