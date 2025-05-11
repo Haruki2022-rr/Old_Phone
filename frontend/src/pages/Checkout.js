@@ -7,6 +7,7 @@ const CheckoutPage = () => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
 
+    // Fetch current user when component mounts
     useEffect(() => {
         axios.get("http://localhost:5050/api/oldPhoneDeals/auth/currentUser", { withCredentials: true })
             .then(res => {
@@ -19,13 +20,16 @@ const CheckoutPage = () => {
             });
     }, []);
 
+    // Calculate total cost
     const total = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
+    // Confirm order and send to backend
     const handleConfirmOrder = async () => {
         if (!user) {
             alert("You must be logged in to confirm the order.");
             return;
         }
+
         try {
             await axios.post("http://localhost:5050/api/oldPhoneDeals/orders", {
                 userId: user._id,
@@ -36,8 +40,10 @@ const CheckoutPage = () => {
                 })),
                 total,
             });
+
             alert("Order placed successfully!");
-            clearCart();
+            clearCart(); // Clear context state
+            localStorage.removeItem("cartItems"); // Clear localStorage manually to ensure sync
         } catch (error) {
             console.error(error);
             alert("Failed to place order.");

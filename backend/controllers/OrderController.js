@@ -1,6 +1,6 @@
 const Order = require('../models/Order');
-
-// create new order
+const Phone = require('../models/Phone');
+// createOrder
 exports.createOrder = async (req, res) => {
     try {
         const { userId, cartItems, total } = req.body;
@@ -20,6 +20,19 @@ exports.createOrder = async (req, res) => {
         });
 
         const savedOrder = await order.save();
+
+        for (const item of cartItems) {
+            const phone = await Phone.findById(item.phoneId);
+
+            if (!phone) {
+                console.warn(`Phone not found for ID: ${item.phoneId}`);
+                continue; // skip if phone not found
+            }
+
+            const newStock = Math.max(0, phone.stock - item.quantity);
+            phone.stock = newStock;
+            await phone.save();
+        }
 
         res.status(201).json({ message: 'Order created successfully', order: savedOrder });
     } catch (error) {
