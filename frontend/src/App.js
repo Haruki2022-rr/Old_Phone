@@ -6,7 +6,6 @@ import Profile from "./pages/Profile";
 import {AuthPage, ResetPasswordPage, VerifyEmailPage}  from "./pages/Auth";
 import "./pages/tailwind.css";
 import { CartProvider } from './context/CartContext';
-import PhoneDetail from "./pages/phoneDetail";
 
 export default function App() {
   return (
