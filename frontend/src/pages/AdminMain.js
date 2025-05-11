@@ -142,17 +142,17 @@ const AdminMain = () => {
     }
   };
 
-const handleViewListings = (userID) => {
-  const userListings = listings.filter(listing => listing.seller === userID);
-  if (userListings.length === 0) {
-    alert("This user has no listings.");
-  } else {
-    const listingsInfo = userListings
-      .map(listing => `Title: ${listing.title}\nBrand: ${listing.brand}\nPrice: $${listing.price}\nStock: ${listing.stock}`)
-      .join("\n\n");
-    alert(`Listings for this user:\n\n${listingsInfo}`);
-  }
-};
+  const handleViewListings = (userID) => {
+    const userListings = listings.filter(listing => listing.seller === userID);
+    if (userListings.length === 0) {
+      alert("This user has no listings.");
+    } else {
+      const listingsInfo = userListings
+        .map(listing => `Title: ${listing.title}\nBrand: ${listing.brand}\nPrice: $${listing.price}\nStock: ${listing.stock}`)
+        .join("\n\n");
+      alert(`Listings for this user:\n\n${listingsInfo}`);
+    }
+  };
 
 
   const handleEditListing = (listingId) => {
@@ -162,6 +162,25 @@ const handleViewListings = (userID) => {
         showMessage(`Listing ${listingId} updated.`, 'success');
     }
   };
+
+  const handleViewReviews = (userID) => {
+    const userReviews = listings.flatMap(listing =>
+      listing.reviews ? listing.reviews.filter(review => review.reviewer === userID).map(review => ({
+        listingTitle: listing.title,
+        content: review.comment,
+      })) : []
+    );
+    if (userReviews.length > 0) {
+      const reviewsText = userReviews
+        .map(item => `Listing: ${item.listingTitle}\nReview: ${item.content}`)
+        .join("\n\n");
+      alert(`User Reviews:\n\n${reviewsText}`);
+    } else {
+      alert("This user has no reviews.");
+    }
+  }
+
+
 
   const handleToggleListingStatus = (listingId) => {
     if (window.confirm(`Are you sure you want to toggle status for listing ${listingId}?`)) {
@@ -286,7 +305,7 @@ const handleViewListings = (userID) => {
                         <button onClick={() => handleViewListings(user._id)} className="text-green-600 hover:text-green-900 mr-3">
                           Listings
                         </button>
-                        <button onClick={() => alert(`View reviews by ${user.firstname} ${user.lastname}`)} className="text-purple-600 hover:text-purple-900">
+                        <button onClick={() => handleViewReviews(user._id)} className="text-purple-600 hover:text-purple-900">
                           Reviews
                         </button>
                       </td>
