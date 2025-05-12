@@ -27,10 +27,12 @@ app.use(
     secret: "topSecret",
     resave: true,
     saveUninitialized: true,
-    rolling: true, // reset cookie & store TTL on every response
+    rolling: true, // reset cookie on every response (no expire with absolute maxAge)
     cookie: {
       httpOnly: true,
-      maxAge: 7 * 24 * 60 * 60 * 1000
+      // 3days expire.   already tested for 30 sec and expired properly for login
+      maxAge: 3 * 24 * 60 * 60 * 1000
+      // for admin expire, this default will be override by adminConroller.js
     }
   })
 );
