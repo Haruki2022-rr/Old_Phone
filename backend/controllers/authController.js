@@ -276,6 +276,8 @@ async function getCurrentUser(req, res) {
   res.json({ user });
 }
 
+
+
 async function updateProfile(req, res) {
 
   const { userDetails, hiddenPassword } = req.body;

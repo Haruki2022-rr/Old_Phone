@@ -4,6 +4,8 @@ const express = require("express");
 const User = require('../models/User');
 const Phone = require('../models/Phone');
 const { signup, emailVerification, login, logout, resetPassword, forgetPassword, getCurrentUser, updatePassword, updateProfile, removeListing, updateListing, hideComment, addListing } = require("../controllers/authController");
+const { adminAuthentication, adminUpdateUser, adminDeleteUser } = require("../controllers/adminController")
+const requireAuth = require('../middleware/requireAuth.js');
 
 // Order Controller
 const { createOrder,
@@ -50,10 +52,30 @@ router.post("/auth/hideComment", hideComment);
 
 router.post("/auth/addListing", addListing);
 
-
-
 //get current use via cookie session /api/oldPhoneDeals/auth/getCurrentUser
 router.get("/auth/currentUser", getCurrentUser);
+
+// admin authentication
+router.post("/admin/authentication", adminAuthentication);
+
+
+router.post('/admin/adminUpdateUser', requireAuth, adminUpdateUser);
+
+router.post('/admin/adminDeleteUser', requireAuth, adminDeleteUser);
+
+// to access session date from frontend
+router.get('/admin/me', requireAuth, (req, res) => {
+    res.json({
+      adminId: req.session.adminId,
+      isAdmin: req.session.isAdmin
+    });
+  });
+
+
+
+
+
+
 
 router.get('/users', async (req, res) => {
     const users = await User.find();
