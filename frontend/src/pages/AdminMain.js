@@ -35,6 +35,16 @@ const AdminMain = () => {
   const [editEmail, setEditEmail] = useState('');
   const [editID, setEditID] = useState('');
 
+  const [editingListing, setEditingListing] = useState(null);
+  const [editListingTitle, setEditListingTitle] = useState('');
+  const [editListingBrand, setEditListingBrand] = useState('');
+  const [editListingPrice, setEditListingPrice] = useState('');
+  const [editListingImage, setEditListingImage] = useState('');
+  const [editListingStock, setEditListingStock] = useState('');
+
+
+
+
   // Filtered data
   const filteredUsers = users.filter(user => {
     const searchTermLower = userSearchTerm.toLowerCase();
@@ -55,6 +65,16 @@ const AdminMain = () => {
     review.listingTitle.toLowerCase().includes(reviewSearchTerm.toLowerCase())
   );
 
+  useEffect(() => {
+    axios.get("/admin/me")
+        .then(res => {
+            console.log(res.data);
+        })
+        .catch(err => {
+            console.error(err);
+            window.location.href = "/"; // Redirect to home page
+        });
+    }, []);
 
   useEffect(() => {
     axios.get("/users")
@@ -83,7 +103,7 @@ const AdminMain = () => {
   // Action Handlers (placeholders - implement API calls and state updates)
   const handleEditUser = (e) => {
     e.preventDefault();
-
+    console.log(editID, editFirstName, editLastName, editEmail);
 
 
     axios.post("/admin/adminUpdateUser", { userID: editID, userFirst: editFirstName, userLast: editLastName, userEmail: editEmail })
@@ -91,13 +111,12 @@ const AdminMain = () => {
                 if (response.status === 200) {
                     alert("Profile updated successfully.");
                     setEditingUser(null);
-                    setUsers(prevUsers =>
-                      prevUsers.map(u =>
-                        u._id === editID
-                          ? { ...u, firstname: editFirstName, lastname: editLastName, email: editEmail }
-                          : u
-                      )
-                    );
+                    setUsers(users.map(user =>
+                      user._id === editID
+                        ? { ...user, firstname: editFirstName, lastname: editLastName, email: editEmail }
+                        : user
+                    ));
+                    
                 } else {
                     alert(response.data.message || "Failed to update profile.");
                 }
@@ -116,71 +135,46 @@ const AdminMain = () => {
 
   };
 
-  const handleDeleteUser = (userID) => {
-    //find userId name
-    const user = users.find(u => u._id === userID);
-    const userName = user.firstname + " " + user.lastname;
-    if (window.confirm('Are you sure you want to delete user ' + userName + '? This action cannot be undone.')) {
-      axios.post('/admin/adminDeleteUser', { userID })
-        .then(response => {
-          if (response.status === 200) {
-            alert("User deleted successfully.");
-            setUsers(users.filter(u => u._id !== userID));
-            showMessage(`User ${userName} deleted.`, 'success');
-          } else {
-            alert(response.data.message || "Failed to delete user.");
-          }
-        })
-        .catch(error => {
-          if (error.response) {
-            alert(error.response.data.message);
-          } else {
-            alert("An unexpected error occurred.");
-          }
-        });
-      
+  const handleDeleteUser = (userId) => {
+    if (userId === 'superadmin_id_placeholder') { // Prevent deleting super admin (not required anymore)
+        showMessage('Cannot delete the super admin account.', 'error');
+        return;
+    }
+    if (window.confirm('Are you sure you want to delete user ' + userId + '? This action cannot be undone.')) {
+      setUsers(users.filter(u => u._id !== userId));
+      showMessage(`User ${userId} deleted.`, 'success');
     }
   };
 
-  const handleViewListings = (userID) => {
-    const userListings = listings.filter(listing => listing.seller === userID);
-    if (userListings.length === 0) {
-      alert("This user has no listings.");
-    } else {
-      const listingsInfo = userListings
-        .map(listing => `Title: ${listing.title}\nBrand: ${listing.brand}\nPrice: $${listing.price}\nStock: ${listing.stock}`)
-        .join("\n\n");
-      alert(`Listings for this user:\n\n${listingsInfo}`);
-    }
+  const handleEditListing = (e) => {
+      e.preventDefault();
+
+      axios.post("/admin/adminEditListing", { listingID: editingListing._id, listingTitle: editListingTitle, listingBrand: editListingBrand,listingImage: editListingImage, listingPrice: editListingPrice, listingStock: editListingStock })
+              .then(response => {
+                  if (response.status === 200) {
+                      alert("Listing updated successfully.");
+                      setEditingListing(null);
+                      setListings(listings.map(listing =>
+                        listing._id === editingListing._id
+                          ? { ...listing, title: editListingTitle, brand: editListingBrand, image: editListingImage, price: editListingPrice, stock: editListingStock }
+                          : listing
+                      ));
+                      
+                  } else {
+                      alert(response.data.message || "Failed to update listing.");
+                  }
+              })
+              .catch(error => {
+                  if (error.response) {
+                      alert(error.response.data.message);
+                  } else {
+                      alert("An unexpected error occurred.");
+                  }
+              });
+
+    //refresh window
+  
   };
-
-
-  const handleEditListing = (listingId) => {
-    const newTitle = prompt("Enter new title for listing " + listingId + ":");
-    if (newTitle) {
-        setListings(listings.map(l => l.id === listingId ? {...l, title: newTitle} : l));
-        showMessage(`Listing ${listingId} updated.`, 'success');
-    }
-  };
-
-  const handleViewReviews = (userID) => {
-    const userReviews = listings.flatMap(listing =>
-      listing.reviews ? listing.reviews.filter(review => review.reviewer === userID).map(review => ({
-        listingTitle: listing.title,
-        content: review.comment,
-      })) : []
-    );
-    if (userReviews.length > 0) {
-      const reviewsText = userReviews
-        .map(item => `Listing: ${item.listingTitle}\nReview: ${item.content}`)
-        .join("\n\n");
-      alert(`User Reviews:\n\n${reviewsText}`);
-    } else {
-      alert("This user has no reviews.");
-    }
-  }
-
-
 
   const handleToggleListingStatus = (listingId) => {
     if (window.confirm(`Are you sure you want to toggle status for listing ${listingId}?`)) {
@@ -302,10 +296,10 @@ const AdminMain = () => {
                         <button onClick={() => handleDeleteUser(user._id)} className="text-red-600 hover:text-red-900 mr-3">
                           Delete
                         </button>
-                        <button onClick={() => handleViewListings(user._id)} className="text-green-600 hover:text-green-900 mr-3">
+                        <button onClick={() => alert(`View listings for ${user.firstname} ${user.lastname}`)} className="text-green-600 hover:text-green-900 mr-3">
                           Listings
                         </button>
-                        <button onClick={() => handleViewReviews(user._id)} className="text-purple-600 hover:text-purple-900">
+                        <button onClick={() => alert(`View reviews by ${user.firstname} ${user.lastname}`)} className="text-purple-600 hover:text-purple-900">
                           Reviews
                         </button>
                       </td>
@@ -343,7 +337,7 @@ const AdminMain = () => {
                     const seller = users.find(user => user._id === listing.seller);
                     const sellerDisplayName = seller ? `${seller.firstname} ${seller.lastname}` : 'Unknown Seller';
                     return (
-                      <tr key={listing.id} className={`hover:bg-gray-50 ${listing.disabled ? 'opacity-60 bg-gray-100' : ''}`}>
+                      <tr key={listing._id} className={`hover:bg-gray-50 ${listing.disabled ? 'opacity-60 bg-gray-100' : ''}`}>
                         <td
                           className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"
                           title={listing.title}
@@ -364,7 +358,19 @@ const AdminMain = () => {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{sellerDisplayName}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <button onClick={() => handleEditListing(listing.id)} className="text-indigo-600 hover:text-indigo-900 mr-3">
+                          <button
+                            onClick={() => {
+                              // Open modal with existing user data
+                              
+                              setEditingListing(listing);
+                              setEditListingTitle(listing.title);
+                              setEditListingBrand(listing.brand);
+                              setEditListingPrice(listing.price);
+                              setEditListingStock(listing.stock);
+                              setEditListingImage(listing.image);
+                            }}
+                            className="text-indigo-600 hover:text-indigo-900 mr-3"
+                            >
                             Edit
                           </button>
                           <button onClick={() => handleToggleListingStatus(listing.id)} className="text-yellow-600 hover:text-yellow-900 mr-3">
@@ -500,7 +506,7 @@ const AdminMain = () => {
       <footer className="mt-8 text-center text-sm text-gray-500">
         <p>Admin page</p>
       </footer>
-
+      
       {editingUser && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white p-6 rounded shadow-md w-full max-w-md">
@@ -540,6 +546,77 @@ const AdminMain = () => {
                 <button
                   type="button"
                   onClick={() => setEditingUser(null)}
+                  className="px-4 py-2 bg-gray-300 rounded"
+                >
+                  Cancel
+                </button>
+                <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded">
+                  Save
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      {editingListing && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white p-6 rounded shadow-md w-full max-w-md">
+            <h2 className="text-xl font-bold mb-4">Edit listing</h2>
+            <form onSubmit={handleEditListing}>
+              <div className="mb-4">
+                <label className="block text-gray-700">Title</label>
+                <input
+                  type="text"
+                  value={editListingTitle}
+                  onChange={(e) => setEditListingTitle(e.target.value)}
+                  className="w-full p-2 border border-gray-300 rounded"
+                  required
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-gray-700">Brand</label>
+                <input
+                  type="text"
+                  value={editListingBrand}
+                  onChange={(e) => setEditListingBrand(e.target.value)}
+                  className="w-full p-2 border border-gray-300 rounded"
+                  required
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-gray-700">Price</label>
+                <input
+                  type="number"
+                  value={editListingPrice}
+                  onChange={(e) => setEditListingPrice(e.target.value)}
+                  className="w-full p-2 border border-gray-300 rounded"
+                  required
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-gray-700">Image</label>
+                <input
+                  type="text"
+                  value={editListingImage}
+                  onChange={(e) => setEditListingImage(e.target.value)}
+                  className="w-full p-2 border border-gray-300 rounded"
+                  required
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-gray-700">Stock</label>
+                <input
+                  type="number"
+                  value={editListingStock}
+                  onChange={(e) => setEditListingStock(e.target.value)}
+                  className="w-full p-2 border border-gray-300 rounded"
+                  required
+                />
+              </div>
+              <div className="flex justify-end space-x-4">
+                <button
+                  type="button"
+                  onClick={() => setEditingListing(null)}
                   className="px-4 py-2 bg-gray-300 rounded"
                 >
                   Cancel
