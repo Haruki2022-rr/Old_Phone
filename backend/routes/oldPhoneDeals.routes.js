@@ -4,7 +4,7 @@ const express = require("express");
 const User = require('../models/User');
 const Phone = require('../models/Phone');
 const { signup, emailVerification, login, logout, resetPassword, forgetPassword, getCurrentUser, updatePassword, updateProfile, removeListing, updateListing, hideComment, addListing } = require("../controllers/authController");
-const { adminAuthentication, adminUpdateUser, adminDeleteUser, adminEditListing } = require("../controllers/adminController")
+const { adminAuthentication, adminUpdateUser, adminDeleteUser, adminEditListing, adminDeleteListing } = require("../controllers/adminController")
 const requireAuth = require('../middleware/requireAuth.js');
 
 // Order Controller
@@ -64,6 +64,8 @@ router.post('/admin/adminUpdateUser', requireAuth, adminUpdateUser);
 router.post('/admin/adminDeleteUser', requireAuth, adminDeleteUser);
 
 router.post('/admin/adminEditListing', requireAuth, adminEditListing);
+
+router.post('/admin/adminDeleteListing', requireAuth, adminDeleteListing);
 
 // to access session date from frontend
 router.get('/admin/me', requireAuth, (req, res) => {
