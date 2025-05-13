@@ -193,7 +193,7 @@ async function adminAuthentication(req, res) {
         req.session.adminId = 'admin0000' 
         req.session.isAdmin = true;
         // to override default maxAge in index.js 
-        req.session.cookie.maxAge = 30 * 100000;  
+        req.session.cookie.maxAge = 30 * 100000; //Can change this to whatever needed  
         res.status(200).json({
         success: true,
         message: "Admin logged in and session initialized successfully",
