@@ -7,6 +7,8 @@ const { signup, emailVerification, login, logout, resetPassword, forgetPassword,
 const { adminAuthentication, adminUpdateUser, adminDeleteUser, adminEditListing, adminDeleteListing } = require("../controllers/adminController")
 const requireAuth = require('../middleware/requireAuth.js');
 
+const {getAdminLogs, createAdminLog} = require("../controllers/adminLogController");
+
 // Order Controller
 const { createOrder,
         getAllOrders,
@@ -102,6 +104,12 @@ router.get('/orders/:id', getOrderById);
 
 // get all orders of a specific user: /api/oldPhoneDeals/orders/by-user/:userId
 router.get('/orders/by-user/:userId', getOrdersByUser);
+
+// get all admin logs: /api/oldPhoneDeals/admin/logs
+router.get('/admin/adminLogs', getAdminLogs);
+
+// create a new admin log entry: /api/oldPhoneDeals/admin/logs
+router.post('/admin/logs', createAdminLog);
 
 
 
