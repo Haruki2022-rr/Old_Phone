@@ -433,6 +433,27 @@ const AdminMain = () => {
     };
   }, [viewListingReviews]);
 
+  useEffect(() => {
+    if (!selectedReview) return;
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") setSelectedReview(null);
+    };
+    const handleClickOutside = (e) => {
+      // Only close if click is on the overlay (not inside modal)
+      if (e.target.classList.contains("bg-black") && e.target.classList.contains("bg-opacity-50")) {
+        setSelectedReview(null);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [selectedReview]);
+
 
 
   return (
@@ -542,7 +563,7 @@ const AdminMain = () => {
                     const seller = users.find(user => user._id === listing.seller);
                     const sellerDisplayName = seller ? `${seller.firstname} ${seller.lastname}` : 'Unknown Seller';
                     return (
-                      <tr key={listing._id} className={`hover:bg-gray-50 ${listing.disabled ? 'opacity-60 bg-gray-100' : ''}`}>
+                      <tr key={listing._id} className={`hover:bg-gray-50 ${listing.disabled ? 'opacity-60 bg-gray-300' : ''}`}>
                         <td
                           className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"
                           title={listing.title}
@@ -601,7 +622,7 @@ const AdminMain = () => {
             <h2 className="text-2xl font-semibold mb-4 text-gray-700">Review & Comment Moderation</h2>
             <input
               type="text"
-              placeholder="Search reviews by user, content, or listing..."
+              placeholder="Search reviews by user, listing, or comment..."
               className="mb-4 p-2 border border-gray-300 rounded w-full focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               value={reviewSearchTerm}
               onChange={(e) => setReviewSearchTerm(e.target.value)}
@@ -632,7 +653,7 @@ const AdminMain = () => {
                   {filteredReviews.map(review => (
                     <tr
                       key={review._id}
-                      className={`hover:bg-gray-50 ${!review.visible ? 'opacity-60 bg-gray-100' : ''} cursor-pointer`}
+                      className={`hover:bg-gray-50 ${!review.hidden ? 'opacity-100 bg-gray-100' : 'opacity-40 bg-gray-300'} cursor-pointer`}
                       onClick={() => setSelectedReview(review)}
                     >
                       <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 max-w-xs truncate" title={review.name}>
@@ -1068,7 +1089,6 @@ const AdminMain = () => {
                 <div className="mt-1 p-2 border rounded bg-gray-50 text-gray-800 break-words">
                 {selectedReview.comment}
                 </div>
-              </div>
             </div>
             <div className="flex justify-end">
               <button
@@ -1079,6 +1099,7 @@ const AdminMain = () => {
               </button>
             </div>
           </div>
+        </div>
       )}
     </div>
   );
