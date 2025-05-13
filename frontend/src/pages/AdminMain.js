@@ -22,7 +22,7 @@ const AdminMain = () => {
   const [users, setUsers] = useState([]);
   const [listings, setListings] = useState([]);
   const [reviews, setReviews] = useState([]);
-  const [sales, setSales] = useState(mockSalesData);
+  const [sales, setSales] = useState(mockSalesData); //These are the mock sales data, replace with real data from backend
 
   // Search and filter states
   const [userSearchTerm, setUserSearchTerm] = useState('');
@@ -323,7 +323,6 @@ const AdminMain = () => {
               });
       
     }
-
     
   };
 
