@@ -1,7 +1,7 @@
 //reference: chatGPT -> told how I implemented banckend and gave detailed requirement to generate this code
 
 import React, { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -10,6 +10,9 @@ import "react-toastify/dist/ReactToastify.css";
 // AUTH PAGE for Login, Sign‑Up, Forgot password
 export function AuthPage() {
   const navigate = useNavigate(); // navicate to another page 
+  const location = useLocation();
+  // where to go back to
+  const from = location.state?.from?.pathname || "/";
   const [mode, setMode] = useState("login"); // which mode we are on among login(default). signuo. reset 
   const [input, setInput] = useState({
     firstname: "",
@@ -32,7 +35,7 @@ export function AuthPage() {
           password: input.password,
         });
         toast.success("Logged in");
-        navigate("/profile", { replace: true }); // or previous page logic
+        navigate(from, { replace: true });
       } else if (mode === "signup") {
         await axios.post("/auth/signup", input);
         toast.success("Verification e‑mail sent");
