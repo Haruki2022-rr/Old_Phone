@@ -92,7 +92,7 @@ async function adminDeleteUser(req, res) {
 }
 async function adminEditListing(req, res) {
     try {
-        const { listingID, listingTitle, listingBrand, listingImage, listingStock, listingPrice, listingDisabled, listingReview} = req.body;
+        const { listingID, listingTitle, listingBrand, listingImage, listingStock, listingPrice, listingDisabled, listingReview, actionType} = req.body;
         
         if(!listingID || !listingTitle || !listingBrand || !listingImage || !listingStock || !listingPrice ){
             return res
@@ -125,10 +125,37 @@ async function adminEditListing(req, res) {
         await listing.save();
         console.log("Updated listing: ", listing);
 
-        await AdminLog.create({
-            action: 'Updated listing',
-            details: `updated the listing ${listingID}`
-        });
+        if(actionType === 'edit'){
+            await AdminLog.create({
+                action: 'Edited listing',
+                details: `Edited the listing ${listingID}`
+            });
+        }
+        else if(actionType === 'toggle'){
+            if(!listingDisabled){
+                await AdminLog.create({
+                    action: 'Disabled listing',
+                    details: `Disabled the listing ${listingID}`
+                });
+            }
+            else{
+                await AdminLog.create({
+                    action: 'Enabled listing',
+                    details: `Enabled the listing ${listingID}`
+                });
+            }
+        }else{
+            const originalState = listingReview.hidden;
+            listingReview.hidden = !listingReview.hidden;
+
+            const actionDesc = listingReview.hidden ? 'Hide Review' : 'Unhide Review';
+            await AdminLog.create({
+                action: 'toggleReview',
+                details: `${actionDesc} for reviewer ${listingReview.reviewer} on listing ${listingID}`
+            });
+        }
+
+
 
         res.status(200).json({
             success: true,
@@ -176,7 +203,7 @@ async function adminDeleteListing(req, res) {
 
         await AdminLog.create({
             action: 'Deleted listing',
-            details: `deleted the listing ${listingID}`
+            details: `Deleted the listing ${listingID}`
         });
 
         res.status(200).json({
