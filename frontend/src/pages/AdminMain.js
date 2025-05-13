@@ -51,8 +51,9 @@ const AdminMain = () => {
     const searchTermLower = userSearchTerm.toLowerCase();
     const fullNameLower = `${user.firstname || ''} ${user.lastname || ''}`.toLowerCase(); // Handle potential null/undefined
     const emailLower = (user.email || '').toLowerCase(); // Handle potential null/undefined
+    const userIDLower = (user._id || '').toLowerCase(); // Handle potential null/undefined
 
-    return fullNameLower.includes(searchTermLower) || emailLower.includes(searchTermLower);
+    return fullNameLower.includes(searchTermLower) || emailLower.includes(searchTermLower) || userIDLower.includes(searchTermLower);
   });
 
   const filteredListings = listings.filter(listing =>
