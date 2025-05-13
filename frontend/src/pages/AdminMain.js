@@ -4,11 +4,7 @@ import './tailwind.css';
 
 
 
-const mockReviewsData = [
-  { id: 'r1', userId: 'u1', userName: 'Alice Wonderland', content: 'Great phone, fast shipping!', listingId: 'l1', listingTitle: 'Vintage iPhone X', visible: true },
-  { id: 'r2', userId: 'u3', userName: 'Charlie Chaplin', content: 'Okay for the price, battery life could be better.', listingId: 'l3', listingTitle: 'Pixel 5 - Like New', visible: false },
-  { id: 'r3', userId: 'u2', userName: 'Bob The Builder', content: 'Excellent condition.', listingId: 'l1', listingTitle: 'Vintage iPhone X', visible: true },
-];
+
 
 const mockSalesData = [
   { id: 's1', timestamp: '2023-10-26 11:00 AM', buyerId: 'u3', buyerName: 'Charlie Chaplin', items: [{ listingId: 'l1', name: 'Vintage iPhone X', qty: 1 }], total: 250 },
@@ -16,13 +12,17 @@ const mockSalesData = [
 ];
 
 const AdminMain = () => {
-  const [activeTab, setActiveTab] = useState('users');
+  const [activeTab, setActiveTab] = useState(() => localStorage.getItem('adminActiveTab') || 'users');
+
+  useEffect(() => {
+    localStorage.setItem('adminActiveTab', activeTab);
+  }, [activeTab]);
   
   // Data states
   const [users, setUsers] = useState([]);
   const [listings, setListings] = useState([]);
-  const [reviews, setReviews] = useState(mockReviewsData);
-  const [sales, setSales] = useState(mockSalesData);
+  const [reviews, setReviews] = useState([]);
+  const [sales, setSales] = useState(mockSalesData); //These are the mock sales data, replace with real data from backend
 
   // Search and filter states
   const [userSearchTerm, setUserSearchTerm] = useState('');
@@ -34,6 +34,16 @@ const AdminMain = () => {
   const [editLastName, setEditLastName] = useState('');
   const [editEmail, setEditEmail] = useState('');
   const [editID, setEditID] = useState('');
+
+  const [editingListing, setEditingListing] = useState(null);
+  const [editListingTitle, setEditListingTitle] = useState('');
+  const [editListingBrand, setEditListingBrand] = useState('');
+  const [editListingPrice, setEditListingPrice] = useState('');
+  const [editListingImage, setEditListingImage] = useState('');
+  const [editListingStock, setEditListingStock] = useState('');
+
+
+
 
   // Filtered data
   const filteredUsers = users.filter(user => {
@@ -50,11 +60,22 @@ const AdminMain = () => {
   );
 
   const filteredReviews = reviews.filter(review =>
-    review.userName.toLowerCase().includes(reviewSearchTerm.toLowerCase()) ||
-    review.content.toLowerCase().includes(reviewSearchTerm.toLowerCase()) ||
-    review.listingTitle.toLowerCase().includes(reviewSearchTerm.toLowerCase())
+    review.name.toLowerCase().includes(reviewSearchTerm.toLowerCase()) ||
+    review.comment.toLowerCase().includes(reviewSearchTerm.toLowerCase()) ||
+    review.listing.title.toLowerCase().includes(reviewSearchTerm.toLowerCase())
   );
+  
 
+  useEffect(() => {
+    axios.get("/admin/me")
+        .then(res => {
+            console.log(res.data);
+        })
+        .catch(err => {
+            console.error(err);
+            window.location.href = "/"; // Redirect to home page
+        });
+    }, []);
 
   useEffect(() => {
     axios.get("/users")
@@ -68,16 +89,42 @@ const AdminMain = () => {
     axios.get("/phones")
         .then(res => {
             setListings(res.data);
+            const allListings = res.data;
+            axios.get("/users")
+              .then(usersRes => {
+                setUsers(usersRes.data);
+                const allReviews = [];
+                allListings.forEach(listing => {
+                  if (listing.reviews && Array.isArray(listing.reviews)) {
+                    listing.reviews.forEach(review => {
+                      const reviewerUser = usersRes.data.find(u => u._id === review.reviewer);
+                      const reviewerName = reviewerUser ? `${reviewerUser.firstname} ${reviewerUser.lastname}` : 'Unknown User';
+                      allReviews.push({
+                        reviewer: review.reviewer,
+                        rating: review.rating,
+                        comment: review.comment,
+                        hidden: review.hidden,
+                        name: reviewerName,
+                        listing: listing
+                      });
+                    });
+                  }
+                });
+                setReviews(allReviews);
+            });
         })
         .catch(err => console.error(err));
     }, []);
+
+
+    
 
   // Placeholder for success/error messages
   const [message, setMessage] = useState({ text: '', type: '' }); // type: 'success' or 'error'
 
   const showMessage = (text, type) => {
     setMessage({ text, type });
-    setTimeout(() => setMessage({ text: '', type: '' }), 3000);
+    setTimeout(() => setMessage({ text: '', type: '' }), 4000);
   };
 
   // Action Handlers (placeholders - implement API calls and state updates)
@@ -85,19 +132,17 @@ const AdminMain = () => {
     e.preventDefault();
 
 
-
     axios.post("/admin/adminUpdateUser", { userID: editID, userFirst: editFirstName, userLast: editLastName, userEmail: editEmail })
             .then(response => {
                 if (response.status === 200) {
                     alert("Profile updated successfully.");
                     setEditingUser(null);
-                    setUsers(prevUsers =>
-                      prevUsers.map(u =>
-                        u._id === editID
-                          ? { ...u, firstname: editFirstName, lastname: editLastName, email: editEmail }
-                          : u
-                      )
-                    );
+                    setUsers(users.map(user =>
+                      user._id === editID
+                        ? { ...user, firstname: editFirstName, lastname: editLastName, email: editEmail }
+                        : user
+                    ));
+                    
                 } else {
                     alert(response.data.message || "Failed to update profile.");
                 }
@@ -112,57 +157,8 @@ const AdminMain = () => {
 
     //refresh window
     
-    
-
   };
-
-  const handleDeleteUser = (userID) => {
-    //find userId name
-    const user = users.find(u => u._id === userID);
-    const userName = user.firstname + " " + user.lastname;
-    if (window.confirm('Are you sure you want to delete user ' + userName + '? This action cannot be undone.')) {
-      axios.post('/admin/adminDeleteUser', { userID })
-        .then(response => {
-          if (response.status === 200) {
-            alert("User deleted successfully.");
-            setUsers(users.filter(u => u._id !== userID));
-            showMessage(`User ${userName} deleted.`, 'success');
-          } else {
-            alert(response.data.message || "Failed to delete user.");
-          }
-        })
-        .catch(error => {
-          if (error.response) {
-            alert(error.response.data.message);
-          } else {
-            alert("An unexpected error occurred.");
-          }
-        });
-      
-    }
-  };
-
-  const handleViewListings = (userID) => {
-    const userListings = listings.filter(listing => listing.seller === userID);
-    if (userListings.length === 0) {
-      alert("This user has no listings.");
-    } else {
-      const listingsInfo = userListings
-        .map(listing => `Title: ${listing.title}\nBrand: ${listing.brand}\nPrice: $${listing.price}\nStock: ${listing.stock}`)
-        .join("\n\n");
-      alert(`Listings for this user:\n\n${listingsInfo}`);
-    }
-  };
-
-
-  const handleEditListing = (listingId) => {
-    const newTitle = prompt("Enter new title for listing " + listingId + ":");
-    if (newTitle) {
-        setListings(listings.map(l => l.id === listingId ? {...l, title: newTitle} : l));
-        showMessage(`Listing ${listingId} updated.`, 'success');
-    }
-  };
-
+  /** 
   const handleViewReviews = (userID) => {
     const userReviews = listings.flatMap(listing =>
       listing.reviews ? listing.reviews.filter(review => review.reviewer === userID).map(review => ({
@@ -179,26 +175,155 @@ const AdminMain = () => {
       alert("This user has no reviews.");
     }
   }
+    */
 
 
+  const handleDeleteUser = (userId) => {
+    if (userId === 'superadmin_id_placeholder') { // Prevent deleting super admin (not required anymore)
+        showMessage('Cannot delete the super admin account.', 'error');
 
-  const handleToggleListingStatus = (listingId) => {
-    if (window.confirm(`Are you sure you want to toggle status for listing ${listingId}?`)) {
-      setListings(listings.map(l => l.id === listingId ? { ...l, disabled: !l.disabled } : l));
-      showMessage(`Listing ${listingId} status toggled.`, 'success');
+        return;
+    }
+    if (window.confirm('Are you sure you want to delete user ' + userId + '? This action cannot be undone.')) {
+      setUsers(users.filter(u => u._id !== userId));
+      showMessage(`User ${userId} deleted.`, 'success');
     }
   };
 
-  const handleDeleteListing = (listingId) => {
-    if (window.confirm('Are you sure you want to delete listing ' + listingId + '?')) {
-      setListings(listings.filter(l => l.id !== listingId));
-      showMessage(`Listing ${listingId} deleted.`, 'success');
-    }
-  };
+  const handleEditListing = (e) => {
+      e.preventDefault();
+
+      axios.post("/admin/adminEditListing", { listingID: editingListing._id, listingTitle: editListingTitle, listingBrand: editListingBrand,listingImage: editListingImage, listingPrice: editListingPrice, listingStock: editListingStock })
+              .then(response => {
+                  if (response.status === 200) {
+                      alert("Listing updated successfully.");
+                      setEditingListing(null);
+                      setListings(listings.map(listing =>
+                        listing._id === editingListing._id
+                          ? { ...listing, title: editListingTitle, brand: editListingBrand, image: editListingImage, price: editListingPrice, stock: editListingStock }
+                          : listing
+                      ));
+                      
+                  } else {
+                      alert(response.data.message || "Failed to update listing.");
+                  }
+              })
+              .catch(error => {
+                  if (error.response) {
+                      alert(error.response.data.message);
+                  } else {
+                      alert("An unexpected error occurred.");
+                  }
+              });
+
+    //refresh window
   
-  const handleToggleReviewVisibility = (reviewId) => {
-    setReviews(reviews.map(r => r.id === reviewId ? { ...r, visible: !r.visible } : r));
-    showMessage(`Review ${reviewId} visibility toggled.`, 'success');
+  };
+
+  const handleToggleListingStatus = (listing) => {
+    if (window.confirm(`Are you sure you want to toggle status for listing ${listing._id}?`)) {
+
+      axios.post("/admin/adminEditListing", { listingID: listing._id, listingTitle: listing.title, listingBrand: listing.brand, listingImage: listing.image, listingStock: listing.stock, listingPrice: listing.price, listingDisabled: listing.disabled })
+              .then(response => {
+                  if (response.status === 200) {
+                      setListings(listings.map(l => l._id === listing._id ? { ...l, disabled: !l.disabled } : l));
+                      showMessage(`Listing ${listing._id} status toggled.`, 'success');
+                  } else {
+                      alert(response.data.message || "Failed to update listing status.");
+                  }
+              })
+              .catch(error => {
+                  if (error.response) {
+                      alert(error.response.data.message);
+                  } else {
+                      alert("An unexpected error occurred.");
+                  }
+              });
+      
+    }
+  };
+
+  const handleDeleteListing = (listing) => {
+    if (window.confirm(`Are you sure you want to delete listing ${listing._id}?`)) {
+
+      axios.post("/admin/adminDeleteListing", { listingID: listing._id})
+                .then(response => {
+                    if (response.status === 200) {
+                        showMessage(`Listing ${listing._id} deleted.`, 'success');
+                        setListings(listings.filter(l => l._id !== listing._id));
+                        
+                    } else {
+                        alert(response.data.message || "Failed to update listing.");
+                    }
+                })
+                .catch(error => {
+                    if (error.response) {
+                        alert(error.response.data.message);
+                    } else {
+                        alert("An unexpected error occurred.");
+                    }
+                });
+    } 
+    else {
+      showMessage('Listing deletion cancelled.', 'error');
+    }
+
+  };
+
+  /** 
+  const handleViewListings = (userID) => {
+    const userListings = listings.filter(listing => listing.seller === userID);
+    if (userListings.length === 0) {
+      alert("This user has no listings.");
+    } else {
+      const listingsInfo = userListings
+        .map(listing => `Title: ${listing.title}\nBrand: ${listing.brand}\nPrice: $${listing.price}\nStock: ${listing.stock}`)
+        .join("\n\n");
+      alert(`Listings for this user:\n\n${listingsInfo}`);
+    }
+  };
+  */
+
+/** 
+  const handleViewListingReviews = (listing) => {
+    const listingReviews = reviews.filter(review => review.listing.title === listing.title);
+    if (listingReviews.length === 0) {
+      alert("This listing has no reviews.");
+    } else {
+      const reviewsInfo = listingReviews
+        .map(review => `User: ${review.name}\nRating: ${review.rating}\nComment: ${review.comment}`)
+        .join("\n\n");
+      alert(`Reviews for this listing:\n\n${reviewsInfo}`);
+    }
+  }
+*/
+  
+
+
+
+  const handleToggleReviewVisibility = (review) => {
+    if (window.confirm(`Are you sure you want to toggle status for ${review.name}'s review?`)) {
+
+      axios.post("/admin/adminEditListing", { listingID: review.listing._id, listingTitle: review.listing.title, listingBrand: review.listing.brand, listingImage: review.listing.image, listingStock: review.listing.stock, listingPrice: review.listing.price, listingReview: review })
+              .then(response => {
+                  if (response.status === 200) {
+                      setReviews(reviews.map(r => r === review ? { ...r, hidden: !r.hidden } : r));
+                      showMessage(`Review by ${review.name} visibility toggled.`, 'success');
+                      console.log(response.data.listing)
+                  } else {
+                      alert(response.data.message || "Failed to update listing status.");
+                  }
+              })
+              .catch(error => {
+                  if (error.response) {
+                      alert(error.response.data.message);
+                  } else {
+                      alert("An unexpected error occurred.");
+                  }
+              });
+      
+    }
+    
   };
 
   const handleExportSales = (format) => {
@@ -206,6 +331,8 @@ const AdminMain = () => {
     alert(`Exporting sales data as ${format}... (Not implemented)`);
     showMessage(`Sales data export initiated as ${format}.`, 'success');
   };
+
+
 
   const TabButton = ({ tabName, label }) => (
     <button
@@ -236,6 +363,98 @@ const AdminMain = () => {
     }
   };
 
+  // States for popups
+  const [selectedReview, setSelectedReview] = useState(null);
+  const [userReviews, setUserReviews] = useState(null);
+  const [userListings, setUserListings] = useState(null);
+  const [viewListingReviews, setViewListingReviews] = useState(null);
+
+  useEffect(() => {
+    if (!userListings) return;
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") setUserListings(null);
+    };
+    const handleClickOutside = (e) => {
+      // Only close if click is on the overlay (not inside modal)
+      if (e.target.classList.contains("bg-black") && e.target.classList.contains("bg-opacity-50")) {
+        setUserListings(null);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [userListings]);
+
+  useEffect(() => {
+    if (!userReviews) return;
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") setUserReviews(null);
+    };
+    const handleClickOutside = (e) => {
+      // Only close if click is on the overlay (not inside modal)
+      if (e.target.classList.contains("bg-black") && e.target.classList.contains("bg-opacity-50")) {
+        setUserReviews(null);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [userReviews]);
+
+  useEffect(() => {
+    if (!viewListingReviews) return;
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") setViewListingReviews(null);
+    };
+    const handleClickOutside = (e) => {
+      // Only close if click is on the overlay (not inside modal)
+      if (e.target.classList.contains("bg-black") && e.target.classList.contains("bg-opacity-50")) {
+        setViewListingReviews(null);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [viewListingReviews]);
+
+  useEffect(() => {
+    if (!selectedReview) return;
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") setSelectedReview(null);
+    };
+    const handleClickOutside = (e) => {
+      // Only close if click is on the overlay (not inside modal)
+      if (e.target.classList.contains("bg-black") && e.target.classList.contains("bg-opacity-50")) {
+        setSelectedReview(null);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [selectedReview]);
+
+
+
   return (
     <div className="min-h-screen bg-gray-100 p-4">
       <header className="mb-6">
@@ -243,7 +462,7 @@ const AdminMain = () => {
       </header>
 
       {message.text && (
-        <div className={`p-3 my-4 rounded-md text-white ${message.type === 'success' ? 'bg-green-500' : 'bg-red-500'}`}>
+        <div className={`fixed top-24 left-1/2 transform -translate-x-1/2 z-50 p-3 rounded-md text-white shadow-lg ${message.type === 'success' ? 'bg-green-500' : 'bg-red-500'}`}>
           {message.text}
         </div>
       )}
@@ -302,10 +521,10 @@ const AdminMain = () => {
                         <button onClick={() => handleDeleteUser(user._id)} className="text-red-600 hover:text-red-900 mr-3">
                           Delete
                         </button>
-                        <button onClick={() => handleViewListings(user._id)} className="text-green-600 hover:text-green-900 mr-3">
+                        <button onClick={() => setUserListings(user)} className="text-green-600 hover:text-green-900 mr-3">
                           Listings
                         </button>
-                        <button onClick={() => handleViewReviews(user._id)} className="text-purple-600 hover:text-purple-900">
+                        <button onClick={() => setUserReviews(user)} className="text-purple-600 hover:text-purple-900">
                           Reviews
                         </button>
                       </td>
@@ -343,7 +562,7 @@ const AdminMain = () => {
                     const seller = users.find(user => user._id === listing.seller);
                     const sellerDisplayName = seller ? `${seller.firstname} ${seller.lastname}` : 'Unknown Seller';
                     return (
-                      <tr key={listing.id} className={`hover:bg-gray-50 ${listing.disabled ? 'opacity-60 bg-gray-100' : ''}`}>
+                      <tr key={listing._id} className={`hover:bg-gray-50 ${listing.disabled ? 'opacity-60 bg-gray-300' : ''}`}>
                         <td
                           className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"
                           title={listing.title}
@@ -364,34 +583,45 @@ const AdminMain = () => {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{sellerDisplayName}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <button onClick={() => handleEditListing(listing.id)} className="text-indigo-600 hover:text-indigo-900 mr-3">
+                          <button
+                            onClick={() => {
+                              // Open modal with existing user data
+                              
+                              setEditingListing(listing);
+                              setEditListingTitle(listing.title);
+                              setEditListingBrand(listing.brand);
+                              setEditListingPrice(listing.price);
+                              setEditListingStock(listing.stock);
+                              setEditListingImage(listing.image);
+                            }}
+                            className="text-indigo-600 hover:text-indigo-900 mr-3"
+                            >
                             Edit
                           </button>
-                          <button onClick={() => handleToggleListingStatus(listing.id)} className="text-yellow-600 hover:text-yellow-900 mr-3">
+                          <button onClick={() => handleToggleListingStatus(listing)} className="text-yellow-600 hover:text-yellow-900 mr-3">
                             {listing.disabled ? 'Enable' : 'Disable'}
                           </button>
-                          <button onClick={() => handleDeleteListing(listing.id)} className="text-red-600 hover:text-red-900 mr-3">
+                          <button onClick={() => handleDeleteListing(listing)} className="text-red-600 hover:text-red-900 mr-3">
                             Delete
                           </button>
-                          <button onClick={() => alert(`View reviews for ${listing.title}`)} className="text-green-600 hover:text-green-900">
+                          <button onClick={() => setViewListingReviews(listing)} className="text-green-600 hover:text-green-900">
                             Reviews
                           </button>
                         </td>
                       </tr>
                     );
                   })}
-                </tbody>
-              </table>
-            </div>
-          </section>
-        )}
-
+                        </tbody>
+                      </table>
+                    </div>
+                  </section>
+                )}
         {activeTab === 'reviews' && (
           <section>
             <h2 className="text-2xl font-semibold mb-4 text-gray-700">Review & Comment Moderation</h2>
             <input
               type="text"
-              placeholder="Search reviews by user, content, or listing..."
+              placeholder="Search reviews by user, listing, or comment..."
               className="mb-4 p-2 border border-gray-300 rounded w-full focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               value={reviewSearchTerm}
               onChange={(e) => setReviewSearchTerm(e.target.value)}
@@ -400,31 +630,56 @@ const AdminMain = () => {
               <table className="min-w-full bg-white border border-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    {['User', 'Listing', 'Content', 'Visibility', 'Actions'].map(header => (
-                      <th key={header} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        {header}
-                      </th>
-                    ))}
+                    {/* Make columns for name and listing narrow, comment wide */}
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32 max-w-xs truncate">
+                      User
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-48 max-w-sm truncate">
+                      Listing
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-auto">
+                      Comment
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
+                      Visibility
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {filteredReviews.map(review => (
-                    <tr key={review.id} className={`hover:bg-gray-50 ${!review.visible ? 'opacity-60 bg-gray-100' : ''}`}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{review.userName}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{review.listingTitle}</td>
-                      <td className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate">{review.content}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                    <tr
+                      key={review._id}
+                      className={`hover:bg-gray-50 ${!review.hidden ? 'opacity-100 bg-gray-100' : 'opacity-40 bg-gray-300'} cursor-pointer`}
+                      onClick={() => setSelectedReview(review)}
+                    >
+                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 max-w-xs truncate" title={review.name}>
+                        {review.name}
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 max-w-sm truncate" title={review.listing.title}>
+                        {review.listing.title}
+                      </td>
+                      <td className="px-4 py-4 text-sm text-gray-900 max-w-2xl break-words" title={review.comment}>
+                        {review.comment.length > 120 ? (
+                          <>
+                            {review.comment.slice(0, 120)}...
+                          </>
+                        ) : review.comment}
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap text-sm">
                         <span
                           className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                            review.visible ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                            review.hidden ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800' 
                           }`}
                         >
-                          {review.visible ? 'Visible' : 'Hidden'}
+                          {review.hidden ? 'Hidden' : 'Visible'}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <button onClick={() => handleToggleReviewVisibility(review.id)} className="text-blue-600 hover:text-blue-900">
-                          {review.visible ? 'Hide' : 'Show'}
+                      <td className="px-4 py-4 whitespace-nowrap text-sm font-medium" onClick={e => e.stopPropagation()}>
+                        <button onClick={() => handleToggleReviewVisibility(review)} className="text-blue-600 hover:text-blue-900">
+                          {review.hidden ? 'Show' : 'Hide'}
                         </button>
                       </td>
                     </tr>
@@ -436,62 +691,61 @@ const AdminMain = () => {
         )}
 
         {activeTab === 'sales' && (
-          <section>
-            <h2 className="text-2xl font-semibold mb-4 text-gray-700">Sales and Activity Logs</h2>
-            <div className="mb-4 flex space-x-2">
-              <button
-                onClick={() => handleExportSales('CSV')}
-                className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded transition-colors duration-150 ease-in-out"
-              >
-                Export as CSV
-              </button>
-              <button
-                onClick={() => handleExportSales('JSON')}
-                className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition-colors duration-150 ease-in-out"
-              >
-                Export as JSON
-              </button>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="min-w-full bg-white border border-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    {['Timestamp', 'Buyer', 'Items Purchased', 'Total Amount'].map(header => (
-                      <th key={header} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <section>
+                  <h2 className="text-2xl font-semibold mb-4 text-gray-700">Sales and Activity Logs</h2>
+                  <div className="mb-4 flex space-x-2">
+                    <button
+                    onClick={() => handleExportSales('CSV')}
+                    className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded transition-colors duration-150 ease-in-out"
+                    >
+                    Export as CSV
+                    </button>
+                    <button
+                    onClick={() => handleExportSales('JSON')}
+                    className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition-colors duration-150 ease-in-out"
+                    >
+                    Export as JSON
+                    </button>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full bg-white border border-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                      {['Timestamp', 'Buyer', 'Items Purchased', 'Total Amount'].map(header => (
+                        <th key={header} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         {header}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {sales.map(sale => (
-                    <tr key={sale.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatDate(sale.timestamp)}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{sale.buyerName}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        </th>
+                      ))}
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {sales.map(sale => (
+                      <tr key={sale._id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatDate(sale.timestamp)}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{sale.buyerName}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {sale.items.map(item => `${item.name} (Qty: ${item.qty})`).join(', ')}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${sale.total}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <div className="mt-6 p-4 border border-gray-200 rounded bg-gray-50">
-              <h3 className="text-lg font-semibold mb-2 text-gray-700">Recent Activity / Notifications</h3>
-              <ul className="list-disc list-inside text-sm text-gray-600 space-y-1">
-                <li>
-                  Order #S1 placed by {sales[0]?.buyerName} for {sales[0]?.items[0]?.name} on {formatDate(sales[0]?.timestamp)}.
-                </li>
-                <li>
-                  User '{users[2]?.firstname} {users[2]?.lastname}' ({users[2]?.email}) registered on{' '}
-                  {formatDate(users[2]?.registrationDate)}.
-                </li>
-                <li>
-                  Listing '{listings[0]?.title}' received a new review on{' '}
-                  {formatDate(reviews.find(r => r.listingId === listings[0]?.id)?.timestamp)}.
-                </li>
-                {/* Add more dynamic notifications here, ensuring to use formatDate for any date values */}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${sale.total}</td>
+                      </tr>
+                      ))}
+                    </tbody>
+                    </table>
+                  </div>
+                  <div className="mt-6 p-4 border border-gray-200 rounded bg-gray-50">
+                    <h3 className="text-lg font-semibold mb-2 text-gray-700">Recent Activity / Notifications</h3>
+                    <ul className="list-disc list-inside text-sm text-gray-600 space-y-1">
+                    <li>
+                      Order #S1 placed by {sales[0]?.buyerName} for {sales[0]?.items[0]?.name} on {formatDate(sales[0]?.timestamp)}.
+                    </li>
+                    <li>
+                      User '{users[2]?.firstname} {users[2]?.lastname}' ({users[2]?.email}) registered on{' '}
+                      {formatDate(users[2]?.registrationDate)}.
+                    </li>
+                    <li>
+                      Listing '{listings[0]?.title}' received a new review on{' '}
+                      {formatDate(reviews.find(r => r.listingId === listings[0]?.id)?.timestamp)}.
+                    </li>
               </ul>
             </div>
           </section>
@@ -500,7 +754,7 @@ const AdminMain = () => {
       <footer className="mt-8 text-center text-sm text-gray-500">
         <p>Admin page</p>
       </footer>
-
+      
       {editingUser && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white p-6 rounded shadow-md w-full max-w-md">
@@ -549,6 +803,300 @@ const AdminMain = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {editingListing && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white p-6 rounded shadow-md w-full max-w-md">
+            <h2 className="text-xl font-bold mb-4">Edit listing</h2>
+            <form onSubmit={handleEditListing}>
+              <div className="mb-4">
+                <label className="block text-gray-700">Title</label>
+                <input
+                  type="text"
+                  value={editListingTitle}
+                  onChange={(e) => setEditListingTitle(e.target.value)}
+                  className="w-full p-2 border border-gray-300 rounded"
+                  required
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-gray-700">Brand</label>
+                <input
+                  type="text"
+                  value={editListingBrand}
+                  onChange={(e) => setEditListingBrand(e.target.value)}
+                  className="w-full p-2 border border-gray-300 rounded"
+                  required
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-gray-700">Price</label>
+                <input
+                  type="number"
+                  value={editListingPrice}
+                  onChange={(e) => setEditListingPrice(e.target.value)}
+                  className="w-full p-2 border border-gray-300 rounded"
+                  required
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-gray-700">Image</label>
+                <input
+                  type="text"
+                  value={editListingImage}
+                  onChange={(e) => setEditListingImage(e.target.value)}
+                  className="w-full p-2 border border-gray-300 rounded"
+                  required
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-gray-700">Stock</label>
+                <input
+                  type="number"
+                  value={editListingStock}
+                  onChange={(e) => setEditListingStock(e.target.value)}
+                  className="w-full p-2 border border-gray-300 rounded"
+                  required
+                />
+              </div>
+              <div className="flex justify-end space-x-4">
+                <button
+                  type="button"
+                  onClick={() => setEditingListing(null)}
+                  className="px-4 py-2 bg-gray-300 rounded"
+                >
+                  Cancel
+                </button>
+                <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded">
+                  Save
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      {userListings && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-white p-6 rounded shadow-md w-full max-w-lg relative">
+            <button
+              className="absolute top-3 right-4 text-gray-500 hover:text-gray-700 text-2xl"
+              onClick={() => setUserListings(null)}
+              aria-label="Close"
+            >
+              &times;
+            </button>
+            <h2 className="text-xl font-bold mb-4">
+              Listings for {userListings.firstname} {userListings.lastname}
+            </h2>
+            <div className="overflow-x-auto">
+              <table className="min-w-full bg-white border border-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Brand</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {listings.filter(listing => listing.seller === userListings._id).length === 0 ? (
+                    <tr>
+                      <td colSpan={4} className="px-4 py-4 text-center text-gray-500">
+                        No listings found for this user.
+                      </td>
+                    </tr>
+                  ) : (
+                    listings
+                      .filter(listing => listing.seller === userListings._id)
+                      .map(listing => (
+                        <tr key={listing._id}>
+                          <td className="px-4 py-2">{listing.title}</td>
+                          <td className="px-4 py-2">{listing.brand}</td>
+                          <td className="px-4 py-2">${listing.price}</td>
+                          <td className="px-4 py-2">{listing.stock}</td>
+                        </tr>
+                      ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+            <div className="flex justify-end mt-4">
+              <button
+                className="px-4 py-2 bg-blue-600 text-white rounded"
+                onClick={() => setUserListings(null)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {userReviews && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-white p-6 rounded shadow-md w-full max-w-lg relative">
+            <button
+              className="absolute top-3 right-4 text-gray-500 hover:text-gray-700 text-2xl"
+              onClick={() => setUserReviews(null)}
+              aria-label="Close"
+            >
+              &times;
+            </button>
+            <h2 className="text-xl font-bold mb-4">
+              Reviews for {userReviews.firstname} {userReviews.lastname}
+            </h2>
+            <div className="overflow-y-auto max-h-[60vh]">
+              {reviews
+                .filter(review => review.reviewer === userReviews._id)
+                .length === 0 ? (
+                  <div className="px-4 py-4 text-center text-gray-500">
+                    No reviews found for this user.
+                  </div>
+                ) : (
+                  reviews
+                    .filter(review => review.reviewer === userReviews._id)
+                    .map((review, idx) => (
+                      <div key={idx} className="mb-6 border-b pb-4 last:border-b-0 last:pb-0">
+                        <div className="mb-2">
+                          <span className="font-semibold text-gray-700">Listing: </span>
+                          <span>{review.listing.title}</span>
+                        </div>
+                        <div className="mb-2">
+                          <span className="font-semibold text-gray-700">Brand: </span>
+                          <span>{review.listing.brand}</span>
+                        </div>
+                        <div className="mb-2">
+                          <span className="font-semibold text-gray-700">Rating: </span>
+                          <span>{review.rating}</span>
+                        </div>
+                        <div className="mb-2">
+                          <span className="font-semibold text-gray-700">Visibility: </span>
+                          <span>{review.hidden ? 'Hidden' : 'Visible'}</span>
+                        </div>
+                        <div className="mb-2">
+                          <span className="font-semibold text-gray-700">Comment:</span>
+                          <div className="mt-1 p-2 border rounded bg-gray-50 text-gray-800 break-words">
+                            {review.comment}
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                )
+              }
+            </div>
+            <div className="flex justify-end mt-4">
+              <button
+                className="px-4 py-2 bg-blue-600 text-white rounded"
+                onClick={() => setUserReviews(null)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {viewListingReviews && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-white p-6 rounded shadow-md w-full max-w-lg relative">
+            <button
+              className="absolute top-3 right-4 text-gray-500 hover:text-gray-700 text-2xl"
+              onClick={() => setViewListingReviews(null)}
+              aria-label="Close"
+            >
+              &times;
+            </button>
+            <h2 className="text-xl font-bold mb-4">
+              Reviews for {viewListingReviews.title}
+            </h2>
+            <div className="overflow-y-auto max-h-[60vh]">
+              {reviews
+                .filter(review => review.listing._id === viewListingReviews._id)
+                .length === 0 ? (
+                  <div className="px-4 py-4 text-center text-gray-500">
+                    No reviews found for this listing.
+                  </div>
+                ) : (
+                  reviews
+                    .filter(review => review.listing._id === viewListingReviews._id)
+                    .map((review, idx) => (
+                      <div key={idx} className="mb-6 border-b pb-4 last:border-b-0 last:pb-0">
+                        <div className="mb-2">
+                          <span className="font-semibold text-gray-700">User: </span>
+                          <span>{review.name}</span>
+                        </div>
+                        <div className="mb-2">
+                          <span className="font-semibold text-gray-700">Rating: </span>
+                          <span>{review.rating}</span>
+                        </div>
+                        <div className="mb-2">
+                          <span className="font-semibold text-gray-700">Visibility: </span>
+                          <span>{review.hidden ? 'Hidden' : 'Visible'}</span>
+                        </div>
+                        <div className="mb-2">
+                          <span className="font-semibold text-gray-700">Comment:</span>
+                          <div className="mt-1 p-2 border rounded bg-gray-50 text-gray-800 break-words">
+                            {review.comment}
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                )
+              }
+            </div>
+            <div className="flex justify-end mt-4">
+              <button
+                className="px-4 py-2 bg-blue-600 text-white rounded"
+                onClick={() => setViewListingReviews(null)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {selectedReview && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-white p-6 rounded shadow-md w-full max-w-lg relative">
+            <button
+              className="absolute top-3 right-4 text-gray-500 hover:text-gray-700 text-2xl"
+              onClick={() => setSelectedReview(null)}
+              aria-label="Close"
+            >
+              &times;
+            </button>
+            <h2 className="text-xl font-bold mb-4">Review Details</h2>
+            <div className="mb-2">
+              <span className="font-semibold text-gray-700">User: </span>
+              <span>{selectedReview.name}</span>
+            </div>
+            <div className="mb-2">
+              <span className="font-semibold text-gray-700">Listing: </span>
+              <span>{selectedReview.listing.title}</span>
+            </div>
+            <div className="mb-2">
+              <span className="font-semibold text-gray-700">Rating: </span>
+              <span>{selectedReview.rating}</span>
+            </div>
+            <div className="mb-2">
+              <span className="font-semibold text-gray-700">Visibility: </span>
+              <span>{selectedReview.hidden ? 'Hidden' : 'Visible'}</span>
+            </div>
+            <div className="mb-4">
+              <span className="font-semibold text-gray-700">Comment:</span>
+                <div className="mt-1 p-2 border rounded bg-gray-50 text-gray-800 break-words">
+                {selectedReview.comment}
+                </div>
+            </div>
+            <div className="flex justify-end">
+              <button
+                className="px-4 py-2 bg-blue-600 text-white rounded"
+                onClick={() => setSelectedReview(null)}
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}

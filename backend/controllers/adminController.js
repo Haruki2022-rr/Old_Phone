@@ -1,5 +1,6 @@
 const bcrypt = require("bcryptjs");
 const User = require("../models/User");
+const Phone = require("../models/Phone");
 
 const admin = {
     email: "admin@gmail.com",
@@ -77,6 +78,96 @@ async function adminDeleteUser(req, res) {
     }
 
 }
+async function adminEditListing(req, res) {
+    try {
+        const { listingID, listingTitle, listingBrand, listingImage, listingStock, listingPrice, listingDisabled, listingReview} = req.body;
+        
+        if(!listingID || !listingTitle || !listingBrand || !listingImage || !listingStock || !listingPrice ){
+            return res
+            .status(400) 
+            .json({message:'All fields are required'})
+        }
+        const listing = await Phone.findById(listingID);
+        if (!listing) {
+            return res
+                .status(404)
+                .json({ message: "Listing not found" });
+        }
+        if (typeof listingDisabled !== 'undefined') {
+            listing.disabled = !listingDisabled;
+        }
+
+        if (listingReview) {
+            listing.reviews.forEach((review) => {
+                if (review.reviewer.toString() === listingReview.reviewer.toString()) {
+                    review.hidden = !review.hidden;
+                }
+            })
+        }
+
+        listing.title = listingTitle;
+        listing.brand = listingBrand;
+        listing.image = listingImage;
+        listing.stock = listingStock;
+        listing.price = listingPrice;
+        await listing.save();
+        console.log("Updated listing: ", listing);
+
+        res.status(200).json({
+            success: true,
+            message: "Listing updated successfully",
+            listing: {
+                id: listing._id,
+                title: listing.title,
+                brand: listing.brand,
+                image: listing.image,
+                stock: listing.stock,
+                price: listing.price,
+                disabled: listing.disabled,
+                reviews: listing.reviews.map((review) => ({
+                    reviewer: review.reviewer,
+                    rating: review.rating,
+                    comment: review.comment,
+                    hidden: review.hidden,
+                })),
+            },
+        });
+
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+async function adminDeleteListing(req, res) {
+    try {
+        const { listingID } = req.body;
+        if(!listingID){
+            return res
+            .status(400) 
+            .json({message:'Could not find listing ID'})
+        }
+        const listing = await Phone.findById(listingID);
+        
+        if (!listing) {
+            return res
+                .status(404)
+                .json({ message: "Listing not found in database" });
+        }
+        await Phone.findByIdAndDelete(listingID);
+
+        console.log("Deleted listing: ", listing);
+
+        res.status(200).json({
+            success: true,
+            message: "Listing deleted successfully",
+        });
+
+    } catch (error) {
+        console.error(error);
+    }
+
+}
+
 async function adminAuthentication(req, res) {
     try {
         const { email, password } = req.body;
@@ -102,7 +193,7 @@ async function adminAuthentication(req, res) {
         req.session.adminId = 'admin0000' 
         req.session.isAdmin = true;
         // to override default maxAge in index.js 
-        req.session.cookie.maxAge = 30 * 1000;  
+        req.session.cookie.maxAge = 30 * 100000;  
         res.status(200).json({
         success: true,
         message: "Admin logged in and session initialized successfully",
@@ -112,4 +203,4 @@ async function adminAuthentication(req, res) {
     }
 }
 
-module.exports = { adminAuthentication, adminUpdateUser, adminDeleteUser };
+module.exports = { adminAuthentication, adminUpdateUser, adminDeleteUser, adminEditListing, adminDeleteListing };
