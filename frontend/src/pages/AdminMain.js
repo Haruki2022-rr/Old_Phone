@@ -333,11 +333,60 @@ const AdminMain = () => {
     
   };
 
-  const handleExportSales = (format) => {
-    // Mock: In a real app, generate and download file
-    alert(`Exporting sales data as ${format}... (Not implemented)`);
-    showMessage(`Sales data export initiated as ${format}.`, 'success');
-  };
+    //export when click export button
+    const handleExportSales = (format) => {
+        if (!sales || sales.length === 0) {
+            alert("no sales data to export");
+            return;
+        }
+
+        //click 'Export as Json' button
+        if (format === 'JSON') {
+            const jsonString = JSON.stringify(sales, null, 2);
+            const blob = new Blob([jsonString], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = "sales_record.json";
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+
+        //click 'Export as CSV' button
+        if (format === 'CSV') {
+            const headers = ["Timestamp", "Buyer", "Items", "Total"];
+            const rows = sales.map(sale => {
+                const timestamp = new Date(sale.createdAt).toLocaleString();
+                const buyer = sale.user ? `${sale.user.firstname} ${sale.user.lastname}` : "N/A";
+                const items = sale.items.map(item =>
+                    `${item.phone?.title || 'Unknown'} (Qty: ${item.quantity})`
+                ).join("; ");
+                const total = sale.total.toFixed(2);
+                return [timestamp, buyer, items, total];
+            });
+
+            const csvContent = [headers, ...rows]
+                .map(row => row.map(val => `"${val}"`).join(","))
+                .join("\n");
+
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = "sales_record.csv";
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+
+        alert(`Sales data export completed as ${format}.`);
+    };
+
 
 
 
