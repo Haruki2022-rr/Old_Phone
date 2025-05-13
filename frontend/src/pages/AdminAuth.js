@@ -1,5 +1,3 @@
-//reference: chatGPT -> told how I implemented banckend and gave detailed requirement to generate this code
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -9,7 +7,7 @@ import "react-toastify/dist/ReactToastify.css";
 
 // AUTH PAGE for Login, Sign‑Up, Forgot password
 export default function AdminAuthPage() {
-  const navigate = useNavigate(); // navicate to another page 
+  const navigate = useNavigate(); // navigate to another page 
   const [input, setInput] = useState({
     email: "",
     password: "",
