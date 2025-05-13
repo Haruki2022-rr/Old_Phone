@@ -23,6 +23,7 @@ const AdminMain = () => {
   const [listings, setListings] = useState([]);
   const [reviews, setReviews] = useState([]);
   const [sales, setSales] = useState([]);
+  const [adminLogs, setAdminLogs] = useState([]);
 
   // Search and filter states
   const [userSearchTerm, setUserSearchTerm] = useState('');
@@ -133,6 +134,17 @@ const AdminMain = () => {
         const interval = setInterval(fetchOrders, 10000);
 
         return () => clearInterval(interval); //
+    }, []);
+
+
+    //fetch admin Logs
+    useEffect(() => {
+        axios.get("/admin/adminLogs")
+            .then(res => {
+                const sortedLogs = res.data.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                setAdminLogs(sortedLogs);
+            })
+            .catch(err => console.error("Failed to fetch admin logs:", err));
     }, []);
 
 
@@ -541,6 +553,7 @@ const AdminMain = () => {
         <TabButton tabName="listings" label="Listing Management" />
         <TabButton tabName="reviews" label="Review Moderation" />
         <TabButton tabName="sales" label="Sales & Activity" />
+          <TabButton tabName="adminLogs" label="Admin operation log" />
       </nav>
 
       <main className="mt-1 p-6 bg-white shadow-lg rounded-b-lg">
@@ -838,6 +851,31 @@ const AdminMain = () => {
                 </div>
             </section>
         )}
+          {activeTab === 'adminLogs' && (
+              <section>
+                  <h2 className="text-2xl font-semibold mb-4 text-gray-700">Admin Logs</h2>
+                  <div className="overflow-x-auto">
+                      <table className="min-w-full bg-white border border-gray-200">
+                          <thead className="bg-gray-50">
+                          <tr>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Timestamp</th>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Details</th>
+                          </tr>
+                          </thead>
+                          <tbody className="bg-white divide-y divide-gray-200">
+                          {adminLogs.map(log => (
+                              <tr key={log._id}>
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{new Date(log.timestamp).toLocaleString()}</td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">{log.action}</td>
+                                  <td className="px-6 py-4 whitespace-pre-wrap text-sm text-gray-600">{log.details}</td>
+                              </tr>
+                          ))}
+                          </tbody>
+                      </table>
+                  </div>
+              </section>
+          )}
       </main>
         <footer className="mt-8 text-center text-sm text-gray-500">
             <p>Admin page</p>
@@ -860,9 +898,9 @@ const AdminMain = () => {
                         </div>
                         <div className="mb-4">
                             <label className="block text-gray-700">Last Name</label>
-                <input
-                  type="text"
-                  value={editLastName}
+                            <input
+                                type="text"
+                                value={editLastName}
                   onChange={(e) => setEditLastName(e.target.value)}
                   className="w-full p-2 border border-gray-300 rounded"
                   required

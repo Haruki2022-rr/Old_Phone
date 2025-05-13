@@ -109,7 +109,7 @@ router.get('/orders/by-user/:userId', getOrdersByUser);
 router.get('/admin/adminLogs', getAdminLogs);
 
 // create a new admin log entry: /api/oldPhoneDeals/admin/logs
-router.post('/admin/logs', createAdminLog);
+router.post('/admin/adminLogs', createAdminLog);
 
 
 
