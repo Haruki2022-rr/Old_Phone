@@ -242,7 +242,7 @@ const AdminMain = () => {
   const handleEditListing = (e) => {
       e.preventDefault();
 
-      axios.post("/admin/adminEditListing", { listingID: editingListing._id, listingTitle: editListingTitle, listingBrand: editListingBrand,listingImage: editListingImage, listingPrice: editListingPrice, listingStock: editListingStock })
+      axios.post("/admin/adminEditListing", { listingID: editingListing._id, listingTitle: editListingTitle, listingBrand: editListingBrand,listingImage: editListingImage, listingPrice: editListingPrice, listingStock: editListingStock, actionType: 'edit' })
               .then(response => {
                   if (response.status === 200) {
                       alert("Listing updated successfully.");
@@ -272,7 +272,7 @@ const AdminMain = () => {
   const handleToggleListingStatus = (listing) => {
     if (window.confirm(`Are you sure you want to toggle status for listing ${listing._id}?`)) {
 
-      axios.post("/admin/adminEditListing", { listingID: listing._id, listingTitle: listing.title, listingBrand: listing.brand, listingImage: listing.image, listingStock: listing.stock, listingPrice: listing.price, listingDisabled: listing.disabled })
+      axios.post("/admin/adminEditListing", { listingID: listing._id, listingTitle: listing.title, listingBrand: listing.brand, listingImage: listing.image, listingStock: listing.stock, listingPrice: listing.price, listingDisabled: listing.disabled, actionType: 'toggle'})
               .then(response => {
                   if (response.status === 200) {
                       setListings(listings.map(l => l._id === listing._id ? { ...l, disabled: !l.disabled } : l));
@@ -353,7 +353,7 @@ const AdminMain = () => {
   const handleToggleReviewVisibility = (review) => {
     if (window.confirm(`Are you sure you want to toggle status for ${review.name}'s review?`)) {
 
-      axios.post("/admin/adminEditListing", { listingID: review.listing._id, listingTitle: review.listing.title, listingBrand: review.listing.brand, listingImage: review.listing.image, listingStock: review.listing.stock, listingPrice: review.listing.price, listingReview: review })
+      axios.post("/admin/adminEditListing", { listingID: review.listing._id, listingTitle: review.listing.title, listingBrand: review.listing.brand, listingImage: review.listing.image, listingStock: review.listing.stock, listingPrice: review.listing.price, listingReview: review,actionType: 'toggleReview' })
               .then(response => {
                   if (response.status === 200) {
                       setReviews(reviews.map(r => r === review ? { ...r, hidden: !r.hidden } : r));
