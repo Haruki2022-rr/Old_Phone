@@ -58,13 +58,16 @@ const AdminMain = () => {
 
   const filteredListings = listings.filter(listing =>
     listing.title.toLowerCase().includes(listingSearchTerm.toLowerCase()) ||
-    listing.brand.toLowerCase().includes(listingSearchTerm.toLowerCase())
+    listing.brand.toLowerCase().includes(listingSearchTerm.toLowerCase()) ||
+    listing._id.toLowerCase().includes(listingSearchTerm.toLowerCase())
   );
 
   const filteredReviews = reviews.filter(review =>
     review.name.toLowerCase().includes(reviewSearchTerm.toLowerCase()) ||
     review.comment.toLowerCase().includes(reviewSearchTerm.toLowerCase()) ||
-    review.listing.title.toLowerCase().includes(reviewSearchTerm.toLowerCase())
+    review.listing.title.toLowerCase().includes(reviewSearchTerm.toLowerCase()) ||
+    review.listing._id.toLowerCase().includes(reviewSearchTerm.toLowerCase()) ||
+    review.reviewer.toLowerCase().includes(reviewSearchTerm.toLowerCase())
   );
   
 
