@@ -64,6 +64,7 @@ const AdminMain = () => {
     review.comment.toLowerCase().includes(reviewSearchTerm.toLowerCase()) ||
     review.listing.title.toLowerCase().includes(reviewSearchTerm.toLowerCase())
   );
+  
 
   useEffect(() => {
     axios.get("/admin/me")
@@ -115,6 +116,9 @@ const AdminMain = () => {
         .catch(err => console.error(err));
     }, []);
 
+
+    
+
   // Placeholder for success/error messages
   const [message, setMessage] = useState({ text: '', type: '' }); // type: 'success' or 'error'
 
@@ -154,6 +158,7 @@ const AdminMain = () => {
     //refresh window
     
   };
+  /** 
   const handleViewReviews = (userID) => {
     const userReviews = listings.flatMap(listing =>
       listing.reviews ? listing.reviews.filter(review => review.reviewer === userID).map(review => ({
@@ -170,6 +175,7 @@ const AdminMain = () => {
       alert("This user has no reviews.");
     }
   }
+    */
 
 
   const handleDeleteUser = (userId) => {
@@ -264,6 +270,7 @@ const AdminMain = () => {
 
   };
 
+  /** 
   const handleViewListings = (userID) => {
     const userListings = listings.filter(listing => listing.seller === userID);
     if (userListings.length === 0) {
@@ -275,6 +282,8 @@ const AdminMain = () => {
       alert(`Listings for this user:\n\n${listingsInfo}`);
     }
   };
+  */
+
 
   const handleViewListingReviews = (listing) => {
     const listingReviews = reviews.filter(review => review.listing.title === listing.title);
@@ -287,6 +296,7 @@ const AdminMain = () => {
       alert(`Reviews for this listing:\n\n${reviewsInfo}`);
     }
   }
+  
 
 
 
@@ -353,8 +363,52 @@ const AdminMain = () => {
     }
   };
 
-  // State for review modal
+  // States for popups
   const [selectedReview, setSelectedReview] = useState(null);
+  const [userReviews, setUserReviews] = useState(null);
+  const [userListings, setUserListings] = useState(null);
+
+  useEffect(() => {
+    if (!userListings) return;
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") setUserListings(null);
+    };
+    const handleClickOutside = (e) => {
+      // Only close if click is on the overlay (not inside modal)
+      if (e.target.classList.contains("bg-black") && e.target.classList.contains("bg-opacity-50")) {
+        setUserListings(null);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [userListings]);
+  
+  useEffect(() => {
+    if (!userReviews) return;
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") setUserReviews(null);
+    };
+    const handleClickOutside = (e) => {
+      // Only close if click is on the overlay (not inside modal)
+      if (e.target.classList.contains("bg-black") && e.target.classList.contains("bg-opacity-50")) {
+        setUserReviews(null);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [userReviews]);
 
   return (
     <div className="min-h-screen bg-gray-100 p-4">
@@ -422,10 +476,10 @@ const AdminMain = () => {
                         <button onClick={() => handleDeleteUser(user._id)} className="text-red-600 hover:text-red-900 mr-3">
                           Delete
                         </button>
-                        <button onClick={() => handleViewListings(user._id)} className="text-green-600 hover:text-green-900 mr-3">
+                        <button onClick={() => setUserListings(user)} className="text-green-600 hover:text-green-900 mr-3">
                           Listings
                         </button>
-                        <button onClick={() => handleViewReviews(user._id)} className="text-purple-600 hover:text-purple-900">
+                        <button onClick={() => setUserReviews(user)} className="text-purple-600 hover:text-purple-900">
                           Reviews
                         </button>
                       </td>
@@ -778,6 +832,125 @@ const AdminMain = () => {
           </div>
         </div>
       )}
+      {userListings && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-white p-6 rounded shadow-md w-full max-w-lg relative">
+            <button
+              className="absolute top-3 right-4 text-gray-500 hover:text-gray-700 text-2xl"
+              onClick={() => setUserListings(null)}
+              aria-label="Close"
+            >
+              &times;
+            </button>
+            <h2 className="text-xl font-bold mb-4">
+              Listings for {userListings.firstname} {userListings.lastname}
+            </h2>
+            <div className="overflow-x-auto">
+              <table className="min-w-full bg-white border border-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Brand</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {listings.filter(listing => listing.seller === userListings._id).length === 0 ? (
+                    <tr>
+                      <td colSpan={4} className="px-4 py-4 text-center text-gray-500">
+                        No listings found for this user.
+                      </td>
+                    </tr>
+                  ) : (
+                    listings
+                      .filter(listing => listing.seller === userListings._id)
+                      .map(listing => (
+                        <tr key={listing._id}>
+                          <td className="px-4 py-2">{listing.title}</td>
+                          <td className="px-4 py-2">{listing.brand}</td>
+                          <td className="px-4 py-2">${listing.price}</td>
+                          <td className="px-4 py-2">{listing.stock}</td>
+                        </tr>
+                      ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+            <div className="flex justify-end mt-4">
+              <button
+                className="px-4 py-2 bg-blue-600 text-white rounded"
+                onClick={() => setUserListings(null)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {userReviews && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-white p-6 rounded shadow-md w-full max-w-lg relative">
+            <button
+              className="absolute top-3 right-4 text-gray-500 hover:text-gray-700 text-2xl"
+              onClick={() => setUserReviews(null)}
+              aria-label="Close"
+            >
+              &times;
+            </button>
+            <h2 className="text-xl font-bold mb-4">
+              Reviews for {userReviews.firstname} {userReviews.lastname}
+            </h2>
+            <div className="overflow-y-auto max-h-[60vh]">
+              {reviews
+                .filter(review => review.reviewer === userReviews._id)
+                .length === 0 ? (
+                  <div className="px-4 py-4 text-center text-gray-500">
+                    No reviews found for this user.
+                  </div>
+                ) : (
+                  reviews
+                    .filter(review => review.reviewer === userReviews._id)
+                    .map((review, idx) => (
+                      <div key={idx} className="mb-6 border-b pb-4 last:border-b-0 last:pb-0">
+                        <div className="mb-2">
+                          <span className="font-semibold text-gray-700">Listing: </span>
+                          <span>{review.listing.title}</span>
+                        </div>
+                        <div className="mb-2">
+                          <span className="font-semibold text-gray-700">Brand: </span>
+                          <span>{review.listing.brand}</span>
+                        </div>
+                        <div className="mb-2">
+                          <span className="font-semibold text-gray-700">Rating: </span>
+                          <span>{review.rating}</span>
+                        </div>
+                        <div className="mb-2">
+                          <span className="font-semibold text-gray-700">Visibility: </span>
+                          <span>{review.hidden ? 'Hidden' : 'Visible'}</span>
+                        </div>
+                        <div className="mb-2">
+                          <span className="font-semibold text-gray-700">Comment:</span>
+                          <div className="mt-1 p-2 border rounded bg-gray-50 text-gray-800 break-words">
+                            {review.comment}
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                )
+              }
+            </div>
+            <div className="flex justify-end mt-4">
+              <button
+                className="px-4 py-2 bg-blue-600 text-white rounded"
+                onClick={() => setUserReviews(null)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {selectedReview && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
@@ -808,8 +981,9 @@ const AdminMain = () => {
             </div>
             <div className="mb-4">
               <span className="font-semibold text-gray-700">Comment:</span>
-              <div className="mt-1 p-2 border rounded bg-gray-50 text-gray-800 break-words">
+                <div className="mt-1 p-2 border rounded bg-gray-50 text-gray-800 break-words">
                 {selectedReview.comment}
+                </div>
               </div>
             </div>
             <div className="flex justify-end">
@@ -821,7 +995,6 @@ const AdminMain = () => {
               </button>
             </div>
           </div>
-        </div>
       )}
     </div>
   );
