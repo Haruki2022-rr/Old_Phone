@@ -116,10 +116,23 @@ const AdminMain = () => {
         .catch(err => console.error(err));
     }, []);
 
+    //fetch latest order every 10 seconds
     useEffect(() => {
-        axios.get("/orders", { withCredentials: true })
-            .then(res => setSales(res.data))
-            .catch(err => console.error('Failed to fetch orders:', err));
+        const fetchOrders = () => {
+            axios.get("/orders")
+                .then(res => {
+                const sortedOrders = res.data.sort(
+                    (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+                );
+                setSales(sortedOrders);
+            })
+                .catch(err => console.error("Failed to fetch orders:", err));
+        };
+
+        fetchOrders(); // call this first when loading the page.
+        const interval = setInterval(fetchOrders, 10000);
+
+        return () => clearInterval(interval); //
     }, []);
 
 
@@ -800,24 +813,23 @@ const AdminMain = () => {
                 <div className="mt-6 p-4 border border-gray-200 rounded bg-gray-50">
                     <h3 className="text-lg font-semibold mb-2 text-gray-700">Recent Activity / Notifications</h3>
                     <ul className="list-disc list-inside text-sm text-gray-600 space-y-1">
-                        <li>
-                            Order #{sales[0]?._id.slice(-4)} placed by
-                            {' '}
-                            {sales[0]?.user ? `${sales[0].user.firstname} ${sales[0].user.lastname}` : 'Unknown'} for
-                            {' '}
-                            {sales[0]?.items[0]?.phone?.title || 'an item'} on
-                            {' '}
-                            {formatDate(sales[0]?.createdAt)}.
-                        </li>
-                        <li>
-                            User '{users[users.length - 1]?.firstname} {users[users.length - 1]?.lastname}'
-                            ({users[users.length - 1]?.email}) registered on{' '}
-                            {formatDate(users[users.length - 1]?.createdAt)}.
-                        </li>
-                        <li>
-                            Listing '{listings[0]?.title}' received a new review on{' '}
-                            {formatDate(reviews.find(r => r.phoneId === listings[0]?._id)?.createdAt)}.
-                        </li>
+                        {sales.slice(0, 3).map(sale => (
+                            <li key={sale._id}>
+                                Order #{sale._id.slice(-4)} placed by{' '}
+                                {sale.user ? `${sale.user.firstname} ${sale.user.lastname}` : 'Unknown'} for{' '}
+                                {sale.items.map(item => item.phone?.title || 'an item').join(', ')} on{' '}
+                                {new Date(sale.createdAt).toLocaleString()}.
+                            </li>
+                        ))}
+                        {/*<li>*/}
+                        {/*    User '{users[users.length - 1]?.firstname} {users[users.length - 1]?.lastname}'*/}
+                        {/*    ({users[users.length - 1]?.email}) registered on{' '}*/}
+                        {/*    {formatDate(users[users.length - 1]?.createdAt)}.*/}
+                        {/*</li>*/}
+                        {/*<li>*/}
+                        {/*    Listing '{listings[0]?.title}' received a new review on{' '}*/}
+                        {/*    {formatDate(reviews.find(r => r.phoneId === listings[0]?._id)?.createdAt)}.*/}
+                        {/*</li>*/}
                     </ul>
                 </div>
             </section>
