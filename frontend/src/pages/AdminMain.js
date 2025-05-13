@@ -5,11 +5,11 @@ import './tailwind.css';
 
 
 
-
-const mockSalesData = [
-  { id: 's1', timestamp: '2023-10-26 11:00 AM', buyerId: 'u3', buyerName: 'Charlie Chaplin', items: [{ listingId: 'l1', name: 'Vintage iPhone X', qty: 1 }], total: 250 },
-  { id: 's2', timestamp: '2023-10-25 03:00 PM', buyerId: 'u1', buyerName: 'Alice Wonderland', items: [{ listingId: 'l2', name: 'Refurbished Galaxy S10', qty: 1 }], total: 180 },
-];
+//
+// const mockSalesData = [
+//   { id: 's1', timestamp: '2023-10-26 11:00 AM', buyerId: 'u3', buyerName: 'Charlie Chaplin', items: [{ listingId: 'l1', name: 'Vintage iPhone X', qty: 1 }], total: 250 },
+//   { id: 's2', timestamp: '2023-10-25 03:00 PM', buyerId: 'u1', buyerName: 'Alice Wonderland', items: [{ listingId: 'l2', name: 'Refurbished Galaxy S10', qty: 1 }], total: 180 },
+// ];
 
 const AdminMain = () => {
   const [activeTab, setActiveTab] = useState(() => localStorage.getItem('adminActiveTab') || 'users');
@@ -22,7 +22,7 @@ const AdminMain = () => {
   const [users, setUsers] = useState([]);
   const [listings, setListings] = useState([]);
   const [reviews, setReviews] = useState([]);
-  const [sales, setSales] = useState(mockSalesData); //These are the mock sales data, replace with real data from backend
+  const [sales, setSales] = useState([]);
 
   // Search and filter states
   const [userSearchTerm, setUserSearchTerm] = useState('');
@@ -116,10 +116,17 @@ const AdminMain = () => {
         .catch(err => console.error(err));
     }, []);
 
+    useEffect(() => {
+        axios.get("/orders", { withCredentials: true })
+            .then(res => setSales(res.data))
+            .catch(err => console.error('Failed to fetch orders:', err));
+    }, []);
 
-    
 
-  // Placeholder for success/error messages
+
+
+
+    // Placeholder for success/error messages
   const [message, setMessage] = useState({ text: '', type: '' }); // type: 'success' or 'error'
 
   const showMessage = (text, type) => {
@@ -691,87 +698,103 @@ const AdminMain = () => {
         )}
 
         {activeTab === 'sales' && (
-                  <section>
-                  <h2 className="text-2xl font-semibold mb-4 text-gray-700">Sales and Activity Logs</h2>
-                  <div className="mb-4 flex space-x-2">
+            <section>
+                <h2 className="text-2xl font-semibold mb-4 text-gray-700">Sales and Activity Logs</h2>
+                <div className="mb-4 flex space-x-2">
                     <button
-                    onClick={() => handleExportSales('CSV')}
-                    className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded transition-colors duration-150 ease-in-out"
+                        onClick={() => handleExportSales('CSV')}
+                        className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded transition-colors duration-150 ease-in-out"
                     >
-                    Export as CSV
+                        Export as CSV
                     </button>
                     <button
-                    onClick={() => handleExportSales('JSON')}
-                    className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition-colors duration-150 ease-in-out"
+                        onClick={() => handleExportSales('JSON')}
+                        className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition-colors duration-150 ease-in-out"
                     >
-                    Export as JSON
+                        Export as JSON
                     </button>
-                  </div>
-                  <div className="overflow-x-auto">
+                </div>
+                <div className="overflow-x-auto">
                     <table className="min-w-full bg-white border border-gray-200">
-                    <thead className="bg-gray-50">
-                      <tr>
-                      {['Timestamp', 'Buyer', 'Items Purchased', 'Total Amount'].map(header => (
-                        <th key={header} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        {header}
-                        </th>
-                      ))}
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {sales.map(sale => (
-                      <tr key={sale._id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatDate(sale.timestamp)}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{sale.buyerName}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {sale.items.map(item => `${item.name} (Qty: ${item.qty})`).join(', ')}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${sale.total}</td>
-                      </tr>
-                      ))}
-                    </tbody>
+                        <thead className="bg-gray-50">
+                        <tr>
+                            {['Timestamp', 'Buyer', 'Items Purchased', 'Total Amount'].map(header => (
+                                <th key={header}
+                                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    {header}
+                                </th>
+                            ))}
+                        </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                        {sales.map(sale => (
+                            <tr key={sale._id} className="hover:bg-gray-50">
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {formatDate(sale.createdAt)}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {sale.user ? `${sale.user.firstname} ${sale.user.lastname}` : 'N/A'}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {sale.items.map(item =>
+                                        `${item.phone?.title || 'Unknown'} (Qty: ${item.quantity})`
+                                    ).join(', ')}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    ${sale.total.toFixed(2)}
+                                </td>
+                            </tr>
+                        ))}
+                        </tbody>
                     </table>
-                  </div>
-                  <div className="mt-6 p-4 border border-gray-200 rounded bg-gray-50">
+                </div>
+                <div className="mt-6 p-4 border border-gray-200 rounded bg-gray-50">
                     <h3 className="text-lg font-semibold mb-2 text-gray-700">Recent Activity / Notifications</h3>
                     <ul className="list-disc list-inside text-sm text-gray-600 space-y-1">
-                    <li>
-                      Order #S1 placed by {sales[0]?.buyerName} for {sales[0]?.items[0]?.name} on {formatDate(sales[0]?.timestamp)}.
-                    </li>
-                    <li>
-                      User '{users[2]?.firstname} {users[2]?.lastname}' ({users[2]?.email}) registered on{' '}
-                      {formatDate(users[2]?.registrationDate)}.
-                    </li>
-                    <li>
-                      Listing '{listings[0]?.title}' received a new review on{' '}
-                      {formatDate(reviews.find(r => r.listingId === listings[0]?.id)?.timestamp)}.
-                    </li>
-              </ul>
-            </div>
-          </section>
+                        <li>
+                            Order #{sales[0]?._id.slice(-4)} placed by
+                            {' '}
+                            {sales[0]?.user ? `${sales[0].user.firstname} ${sales[0].user.lastname}` : 'Unknown'} for
+                            {' '}
+                            {sales[0]?.items[0]?.phone?.title || 'an item'} on
+                            {' '}
+                            {formatDate(sales[0]?.createdAt)}.
+                        </li>
+                        <li>
+                            User '{users[users.length - 1]?.firstname} {users[users.length - 1]?.lastname}'
+                            ({users[users.length - 1]?.email}) registered on{' '}
+                            {formatDate(users[users.length - 1]?.createdAt)}.
+                        </li>
+                        <li>
+                            Listing '{listings[0]?.title}' received a new review on{' '}
+                            {formatDate(reviews.find(r => r.phoneId === listings[0]?._id)?.createdAt)}.
+                        </li>
+                    </ul>
+                </div>
+            </section>
         )}
       </main>
-      <footer className="mt-8 text-center text-sm text-gray-500">
-        <p>Admin page</p>
-      </footer>
-      
-      {editingUser && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white p-6 rounded shadow-md w-full max-w-md">
-            <h2 className="text-xl font-bold mb-4">Edit User</h2>
-            <form onSubmit={handleEditUser}>
-              <div className="mb-4">
-                <label className="block text-gray-700">First Name</label>
-                <input
-                  type="text"
-                  value={editFirstName}
-                  onChange={(e) => setEditFirstName(e.target.value)}
-                  className="w-full p-2 border border-gray-300 rounded"
-                  required
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block text-gray-700">Last Name</label>
+        <footer className="mt-8 text-center text-sm text-gray-500">
+            <p>Admin page</p>
+        </footer>
+
+        {editingUser && (
+            <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+                <div className="bg-white p-6 rounded shadow-md w-full max-w-md">
+                    <h2 className="text-xl font-bold mb-4">Edit User</h2>
+                    <form onSubmit={handleEditUser}>
+                        <div className="mb-4">
+                            <label className="block text-gray-700">First Name</label>
+                            <input
+                                type="text"
+                                value={editFirstName}
+                                onChange={(e) => setEditFirstName(e.target.value)}
+                                className="w-full p-2 border border-gray-300 rounded"
+                                required
+                            />
+                        </div>
+                        <div className="mb-4">
+                            <label className="block text-gray-700">Last Name</label>
                 <input
                   type="text"
                   value={editLastName}

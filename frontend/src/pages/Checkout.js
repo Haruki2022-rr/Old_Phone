@@ -19,7 +19,7 @@ const CheckoutPage = () => {
             });
     }, []);
 
-    const total = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    const total = cartItems.reduce((sum, item) => sum+item.price* item.quantity, 0);
 
     const handleConfirmOrder = async () => {
         if (!user) {
