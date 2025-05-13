@@ -137,15 +137,17 @@ const AdminMain = () => {
     }, []);
 
 
-    //fetch admin Logs
+    //fetch admin Logs when switch to adminLog tab
     useEffect(() => {
-        axios.get("/admin/adminLogs")
-            .then(res => {
-                const sortedLogs = res.data.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-                setAdminLogs(sortedLogs);
-            })
-            .catch(err => console.error("Failed to fetch admin logs:", err));
-    }, []);
+        if (activeTab === 'adminLogs') {
+            axios.get("/admin/adminLogs")
+                .then(res => {
+                    const sortedLogs = res.data.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                    setAdminLogs(sortedLogs);
+                })
+                .catch(err => console.error("Failed to fetch admin logs:", err));
+        }
+    }, [activeTab]);
 
 
 

@@ -1,6 +1,7 @@
 const bcrypt = require("bcryptjs");
 const User = require("../models/User");
 const Phone = require("../models/Phone");
+const AdminLog = require("../models/AdminLog");
 
 const admin = {
     email: "admin@gmail.com",
@@ -29,6 +30,12 @@ async function adminUpdateUser(req, res) {
         await user.save();
 
         console.log("Updated user: ", user);
+
+        await AdminLog.create({
+            action: 'update user',
+            details: `updated the user ${userID}`
+        });
+
 
         res.status(200).json({
             success: true,
@@ -67,6 +74,11 @@ async function adminDeleteUser(req, res) {
         await User.findByIdAndDelete(userID);
 
         console.log("Deleted user: ", user);
+
+        await AdminLog.create({
+            action: 'delete user',
+            details: `deleted the user ${userID}`
+        });
 
         res.status(200).json({
             success: true,
@@ -113,6 +125,11 @@ async function adminEditListing(req, res) {
         await listing.save();
         console.log("Updated listing: ", listing);
 
+        await AdminLog.create({
+            action: 'Updated listing',
+            details: `updated the listing ${listingID}`
+        });
+
         res.status(200).json({
             success: true,
             message: "Listing updated successfully",
@@ -157,6 +174,11 @@ async function adminDeleteListing(req, res) {
 
         console.log("Deleted listing: ", listing);
 
+        await AdminLog.create({
+            action: 'Deleted listing',
+            details: `deleted the listing ${listingID}`
+        });
+
         res.status(200).json({
             success: true,
             message: "Listing deleted successfully",
@@ -193,7 +215,14 @@ async function adminAuthentication(req, res) {
         req.session.adminId = 'admin0000' 
         req.session.isAdmin = true;
         // to override default maxAge in index.js 
-        req.session.cookie.maxAge = 30 * 100000; //Can change this to whatever needed  
+        req.session.cookie.maxAge = 30 * 100000; //Can change this to whatever needed
+
+        await AdminLog.create({
+            action: 'Admin Login',
+            details: 'Admin logged in'
+        });
+
+
         res.status(200).json({
         success: true,
         message: "Admin logged in and session initialized successfully",
