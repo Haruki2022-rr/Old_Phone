@@ -714,8 +714,12 @@ const AdminMain = () => {
                       <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 max-w-xs truncate" title={review.name}>
                         {review.name}
                       </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 max-w-sm truncate" title={review.listing.title}>
-                        {review.listing.title}
+                      <td className="px-4 py-4 text-sm text-gray-900 max-w-2xl break-words" title={review.listing.title}>
+                        {review.listing.title.length > 62 ? (
+                          <>
+                            {review.listing.title.slice(0, 60)}...
+                          </>
+                        ) : review.listing.title}
                       </td>
                       <td className="px-4 py-4 text-sm text-gray-900 max-w-2xl break-words" title={review.comment}>
                         {review.comment.length > 120 ? (
