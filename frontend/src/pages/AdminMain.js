@@ -284,7 +284,7 @@ const AdminMain = () => {
   };
   */
 
-
+/** 
   const handleViewListingReviews = (listing) => {
     const listingReviews = reviews.filter(review => review.listing.title === listing.title);
     if (listingReviews.length === 0) {
@@ -296,6 +296,7 @@ const AdminMain = () => {
       alert(`Reviews for this listing:\n\n${reviewsInfo}`);
     }
   }
+*/
   
 
 
@@ -367,6 +368,7 @@ const AdminMain = () => {
   const [selectedReview, setSelectedReview] = useState(null);
   const [userReviews, setUserReviews] = useState(null);
   const [userListings, setUserListings] = useState(null);
+  const [viewListingReviews, setViewListingReviews] = useState(null);
 
   useEffect(() => {
     if (!userListings) return;
@@ -388,7 +390,7 @@ const AdminMain = () => {
       window.removeEventListener("mousedown", handleClickOutside);
     };
   }, [userListings]);
-  
+
   useEffect(() => {
     if (!userReviews) return;
     const handleKeyDown = (e) => {
@@ -409,6 +411,29 @@ const AdminMain = () => {
       window.removeEventListener("mousedown", handleClickOutside);
     };
   }, [userReviews]);
+
+  useEffect(() => {
+    if (!viewListingReviews) return;
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") setViewListingReviews(null);
+    };
+    const handleClickOutside = (e) => {
+      // Only close if click is on the overlay (not inside modal)
+      if (e.target.classList.contains("bg-black") && e.target.classList.contains("bg-opacity-50")) {
+        setViewListingReviews(null);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [viewListingReviews]);
+
+
 
   return (
     <div className="min-h-screen bg-gray-100 p-4">
@@ -559,7 +584,7 @@ const AdminMain = () => {
                           <button onClick={() => handleDeleteListing(listing)} className="text-red-600 hover:text-red-900 mr-3">
                             Delete
                           </button>
-                          <button onClick={() => handleViewListingReviews(listing)} className="text-green-600 hover:text-green-900">
+                          <button onClick={() => setViewListingReviews(listing)} className="text-green-600 hover:text-green-900">
                             Reviews
                           </button>
                         </td>
@@ -944,6 +969,65 @@ const AdminMain = () => {
               <button
                 className="px-4 py-2 bg-blue-600 text-white rounded"
                 onClick={() => setUserReviews(null)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {viewListingReviews && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-white p-6 rounded shadow-md w-full max-w-lg relative">
+            <button
+              className="absolute top-3 right-4 text-gray-500 hover:text-gray-700 text-2xl"
+              onClick={() => setViewListingReviews(null)}
+              aria-label="Close"
+            >
+              &times;
+            </button>
+            <h2 className="text-xl font-bold mb-4">
+              Reviews for {viewListingReviews.title}
+            </h2>
+            <div className="overflow-y-auto max-h-[60vh]">
+              {reviews
+                .filter(review => review.listing._id === viewListingReviews._id)
+                .length === 0 ? (
+                  <div className="px-4 py-4 text-center text-gray-500">
+                    No reviews found for this listing.
+                  </div>
+                ) : (
+                  reviews
+                    .filter(review => review.listing._id === viewListingReviews._id)
+                    .map((review, idx) => (
+                      <div key={idx} className="mb-6 border-b pb-4 last:border-b-0 last:pb-0">
+                        <div className="mb-2">
+                          <span className="font-semibold text-gray-700">User: </span>
+                          <span>{review.name}</span>
+                        </div>
+                        <div className="mb-2">
+                          <span className="font-semibold text-gray-700">Rating: </span>
+                          <span>{review.rating}</span>
+                        </div>
+                        <div className="mb-2">
+                          <span className="font-semibold text-gray-700">Visibility: </span>
+                          <span>{review.hidden ? 'Hidden' : 'Visible'}</span>
+                        </div>
+                        <div className="mb-2">
+                          <span className="font-semibold text-gray-700">Comment:</span>
+                          <div className="mt-1 p-2 border rounded bg-gray-50 text-gray-800 break-words">
+                            {review.comment}
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                )
+              }
+            </div>
+            <div className="flex justify-end mt-4">
+              <button
+                className="px-4 py-2 bg-blue-600 text-white rounded"
+                onClick={() => setViewListingReviews(null)}
               >
                 Close
               </button>
