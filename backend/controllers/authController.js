@@ -9,7 +9,7 @@ const Phone = require("../models/Phone");
 
 async function signup(req, res) {
     try {
-      const { firstname, lastname, email, password } = req.body;
+      const { firstname, lastname, email, password, from } = req.body;
       if(!firstname|| !lastname|| !email || !password ){
         return res.json({message:'All fields are required'})
       }
@@ -32,7 +32,8 @@ async function signup(req, res) {
       
         // Build a verification URL. 
         const verificationUrl = 
-          `http://localhost:3000/verifyemail/${verificationToken}`;   
+          `http://localhost:3000/verifyemail/${verificationToken}` +
+          `?from=${encodeURIComponent(from)}`;   
       
         // send the mail
         const fullName = `${newUser.firstname} ${newUser.lastname}`;
