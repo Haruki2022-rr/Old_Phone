@@ -755,7 +755,7 @@ const AdminMain = () => {
                   {filteredReviews.map(review => (
                     <tr
                       key={review._id}
-                      className={`hover:bg-gray-50 ${!review.hidden ? 'opacity-100 bg-gray-100' : 'opacity-40 bg-gray-300'} cursor-pointer`}
+                      className={`hover:bg-gray-50 ${!review.hidden ? '' : 'opacity-40 bg-gray-300'} cursor-pointer`}
                       onClick={() => setSelectedReview(review)}
                     >
                       <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 max-w-xs truncate" title={review.name}>
