@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import './tailwind.css';
 
@@ -13,6 +14,9 @@ const ProfilePage = () => {
         password: ""
     });
     
+    const navigate = useNavigate();
+    const loc = useLocation();
+
     const [draftUser, setDraftUser] = useState(user);
     const [hiddenPassword, setHiddenPassword] = useState({
         password: ""
@@ -581,7 +585,7 @@ const ProfilePage = () => {
                 <p className="text-gray-500 mt-4">You must be signed in to view this page.</p>
                 <button
                     className="px-6 py-2 font-semibold text-white bg-cyan-500 rounded-lg shadow-md hover:bg-cyan-600 mt-4"
-                    onClick={() => (window.location.href = "/auth")}
+                    onClick={() => navigate("/auth", { state: { from: loc } })}
                 >
                     Go to Login
                 </button>

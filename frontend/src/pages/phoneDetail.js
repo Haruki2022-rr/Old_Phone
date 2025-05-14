@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate,useLocation } from 'react-router-dom';
 import { CartContext } from '../context/CartContext';
 import axios from 'axios';
 
@@ -12,6 +12,7 @@ const PhoneDetail = () => {
     const [showQuantityInput, setShowQuantityInput] = useState(false);
     const [user, setUser] = useState(null);
     const { cartItems, addToCart } = useContext(CartContext);
+    const loc = useLocation();
 
     useEffect(() => {
         fetch(`http://localhost:5050/api/oldPhoneDeals/phones/${id}`)
@@ -36,7 +37,7 @@ const PhoneDetail = () => {
     const handleAddToCartClick = () => {
         if (!user) {
             alert("You must be logged in to add items to cart.");
-            navigate("/auth");
+            navigate("/auth", { state: { from: loc } });
             return;
         }
         setShowQuantityInput(true);
