@@ -1,5 +1,6 @@
 // reference: https://www.freecodecamp.org/news/how-to-secure-your-mern-stack-application/
 // reference: https://rajat-m.medium.com/how-to-set-up-email-verification-using-node-js-and-react-js-376e09b371e2
+// reference: chatGPT -> ask for help for small functinality and bug fix.
 const User = require("../models/User");
 const {sendVerificationEmail, sendResetPasswordEmail, sendConfirmationEmail} = require('../utils/email');
 const crypto = require("crypto")
