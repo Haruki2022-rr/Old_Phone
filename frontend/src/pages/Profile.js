@@ -595,8 +595,14 @@ const ProfilePage = () => {
 
     return (
         <div className="profile-container max-w-4xl mx-auto mt-10 p-6 bg-white rounded-lg shadow-md">
-            <div className="profile-header flex items-center justify-between">
-                <h1 className="font-bold text-3xl text-gray-800">Profile</h1>
+            <div className="flex items-center justify-between">
+                <button
+                    className="px-4 py-2 font-semibold text-cyan-500 bg-gray-100 rounded-lg shadow hover:bg-gray-200"
+                    onClick={() => navigate("/")}
+                >
+                    &larr; Back
+                </button>
+                <h1 className="font-bold text-3xl text-gray-800 flex-1 text-center">Profile</h1>
                 <button
                     className="px-6 py-2 font-semibold text-white bg-red-500 rounded-lg shadow-md hover:bg-red-600"
                     onClick={handleSignOut}
