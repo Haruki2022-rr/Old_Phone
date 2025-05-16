@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import axios from 'axios';
 
 import './tailwind.css';
 
 const MainPage = () => {
   const [soldOutSoon, setSoldOutSoon] = useState([]);
+  const [allBrands, setAllBrands] = useState(new Set());
   const [bestSellers, setBestSellers] = useState([]);
   const [searchResults, setSearchResults] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -24,9 +26,23 @@ const MainPage = () => {
       .then(setBestSellers);
   }, []);
 
-  const printConsole = (data) => {
-    console.log('Data:', data);
-  };
+  // Fetch all phones for brand purpose
+  useEffect(() => {
+    axios.get("http://localhost:5050/api/oldPhoneDeals/phones")
+      .then(res => {
+        const phones = res.data;
+        const brandsSet = new Set();
+        phones.forEach(phone => {
+          if (phone.brand && !brandsSet.has(phone.brand)) {
+            brandsSet.add(phone.brand);
+          }
+        });
+        const brandsArray = Array.from(brandsSet);
+        setAllBrands(brandsArray);
+        console.log(brandsArray);
+      })
+      .catch(err => console.error(err));
+  }, []);
 
   const handleSearch = () => {
 
@@ -79,45 +95,44 @@ const MainPage = () => {
 
   return (
     <div className="space-y-10">
-      {/* Search bar */}
-      <div className="flex flex-col items-center space-y-4">
-        <input
-          type="text"
-          placeholder="Search phones..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="border p-2 w-full md:w-1/2 rounded"
-        />
-        <div className="flex gap-4 items-center">
-          <select value={brand} onChange={(e) => setBrand(e.target.value)} className="border p-2 rounded">
-            <option value="">All Brands</option>
-            {['Samsung', 'Apple', 'HTC', 'Huawei', 'Nokia', 'LG', 'Motorola', 'Sony', 'BlackBerry'].map((b) => (
-              <option key={b} value={b}>
-                {b}
-              </option>
-            ))}
-          </select>
+        <div className="flex flex-col items-center space-y-4">
+          <input
+            type="text"
+            placeholder="Search phones..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="border p-2 w-full md:w-1/2 rounded"
+          />
+          <div className="flex gap-4 items-center">
+            <select value={brand} onChange={(e) => setBrand(e.target.value)} className="border p-2 rounded">
+          <option value="">All Brands</option>
+          {allBrands && Array.isArray(allBrands) && allBrands.map((b) => (
+            <option key={b} value={b}>
+              {b}
+            </option>
+          ))}
+            </select>
 
-          <div className="flex flex-col items-center">
-            <span className="text-sm mb-1 h-5">${maxPrice || 'Max'}</span>
-            <input
-              type="range"
-              min="0"
-              max="500"
-              step="1"
-              value={maxPrice}
-              onChange={(e) => setMaxPrice(e.target.value)}
-              className="w-40"
-            />
-            <div className="flex justify-between w-full text-xs text-gray-400">
-              <span>$0</span>
-              <span>$500</span>
-            </div>
+            <div className="flex flex-col items-center">
+          <span className="text-sm mb-1 h-5">${maxPrice || 'Max'}</span>
+          <input
+            type="range"
+            min="0"
+            max="500"
+            step="1"
+            value={maxPrice}
+            onChange={(e) => setMaxPrice(e.target.value)}
+            className="w-40"
+          />
+          <div className="flex justify-between w-full text-xs text-gray-400">
+            <span>$0</span>
+            <span>$500</span>
           </div>
-          <div>
-            <select
-              value={sort}
-              onChange={(e) => {
+            </div>
+            <div>
+          <select
+            value={sort}
+            onChange={(e) => {
                 setSort(e.target.value);
                 setPage(1);
                 }}
