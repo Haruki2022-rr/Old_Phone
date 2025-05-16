@@ -141,7 +141,7 @@ const MainPage = () => {
           <button
             onClick={() => {
               setPage((prev) => Math.max(prev - 1, 1));
-              setTimeout(handleSearch, 0);
+              //setTimeout(() => handleSearch(), 0);
             }}
             disabled={page === 1}
             className={`px-3 py-1 rounded ${page === 1 ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-gray-200 hover:bg-gray-300'}`}
@@ -153,27 +153,7 @@ const MainPage = () => {
               key={idx + 1}
               onClick={() => {
             setPage(idx + 1);
-            const newPage = idx + 1;
-            let url = `http://localhost:5050/api/oldPhoneDeals/phones/search?title=${searchQuery}&page=${newPage}&sort=${sort}`;
-            if (brand) url += `&brand=${brand}`;
-            if (maxPrice) url += `&maxPrice=${maxPrice}`;
-            console.log('Search URL:', url);
-            fetch(url)
-              .then(res => res.json())
-              .then(data => {
-                if (data.phones) {
-                  setSearchResults(data.phones);
-                  setTotalPages(data.totalPages);
-                } else {
-                  setSearchResults([]);
-                  setTotalPages(1);
-                }
-              })
-              .catch(err => {
-                console.error('Search error:', err);
-                setSearchResults([]);
-                setTotalPages(1);
-              });
+            //setTimeout(() => handleSearch(), 0);
               }}
               className={`px-3 py-1 rounded ${
             page === idx + 1
@@ -187,7 +167,7 @@ const MainPage = () => {
           <button
             onClick={() => {
               setPage((prev) => Math.min(prev + 1, totalPages));
-              setTimeout(handleSearch, 0);
+              //setTimeout(() => handleSearch(), 0);
             }}
             disabled={page === totalPages}
             className={`px-3 py-1 rounded ${page === totalPages ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-gray-200 hover:bg-gray-300'}`}
