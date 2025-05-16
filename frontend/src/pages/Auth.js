@@ -182,7 +182,7 @@ export function ResetPasswordPage() {
         password: passwords.pw1,
       });
       toast.success("Password changed");
-      navigate("/auth", { replace: true });
+      navigate("/", { replace: true });
     } catch (err) {
       toast.error(err.response?.data?.message || "Error resetting password");
     }
