@@ -11,7 +11,7 @@ const CheckoutPage = () => {
     const loc = useLocation();
 
     useEffect(() => {
-        axios.get("http://localhost:5050/api/oldPhoneDeals/auth/currentUser", { withCredentials: true })
+        axios.get("/auth/currentUser", { withCredentials: true })
             .then(res => {
                 setUser(res.data.user);
                 setLoading(false);
@@ -41,7 +41,7 @@ const CheckoutPage = () => {
                 total,
             });
 
-            alert("Order placed successfully!");
+            alert("Order successfully");
             clearCart();
             localStorage.removeItem("cartItems");
         } catch (error) {
@@ -50,36 +50,49 @@ const CheckoutPage = () => {
         }
     };
 
+    const backBtn = (
+        <button
+            className="px-4 py-2 font-semibold text-cyan-500 bg-gray-100 rounded-lg shadow hover:bg-gray-200 mb-6"
+            onClick={() => navigate(-1)}
+        >
+            &larr; Back
+        </button>
+    );
+
     if (loading) {
         return <p className="text-center mt-10">Loading...</p>;
     }
 
-    if (!user) {
-        return (
-            <div className="max-w-4xl mx-auto mt-10 p-6 bg-white rounded-lg shadow-md text-center">
-                <h1 className="font-bold text-3xl text-gray-800">Checkout</h1>
-                <p className="text-gray-500 mt-4">You must be signed in to view this page.</p>
-                <button
-                    className="px-6 py-2 font-semibold text-white bg-cyan-500 rounded-lg shadow-md hover:bg-cyan-600 mt-4"
-                    onClick={navigate("/auth", { state: { from: loc } })}
-                >
-                    Go to Login
-                </button>
-            </div>
-        );
-    }
+    // if (!user) {
+    //     return (
+    //         <div className="max-w-4xl mx-auto mt-10 p-6 bg-white rounded-lg shadow-md text-center">
+    //             {backBtn}
+    //             <h1 className="font-bold text-3xl text-gray-800">Checkout</h1>
+    //             <p className="text-gray-500 mt-4">You must be signed in to view this page.</p>
+    //             <button
+    //                 className="px-6 py-2 font-semibold text-white bg-cyan-500 rounded-lg shadow-md hover:bg-cyan-600 mt-4"
+    //                 onClick={navigate("/auth", { state: { from: loc } })}
+    //             >
+    //                 Go to Login
+    //             </button>
+    //         </div>
+    //     );
+    // }
 
     if (!cartItems.length) {
         return (
-            <div className="max-w-2xl mx-auto mt-10 p-6 bg-white rounded-lg shadow-md text-center">
-                <h1 className="text-2xl font-bold mb-4">Your Cart is Empty</h1>
-                <p className="text-gray-600">Add some items to checkout!</p>
+
+            <div className="max-w-2xl mx-auto mt-10 p-6 bg-white rounded-lg shadow-md">
+                {backBtn}
+                <h1 className="text-2xl font-bold mb-4 text-center">Your Cart is Empty</h1>
+                <p className="text-gray-600 text-center">Add some items to checkout!</p>
             </div>
         );
     }
 
     return (
         <div className="max-w-4xl mx-auto mt-10 p-6 bg-white rounded-lg shadow-md">
+            {backBtn}
             <h1 className="text-3xl font-bold mb-6 text-center">Checkout</h1>
 
             <div className="mb-6 p-4 border rounded-md bg-gray-50">
