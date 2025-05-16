@@ -24,14 +24,19 @@ const MainPage = () => {
       .then(setBestSellers);
   }, []);
 
+  const printConsole = (data) => {
+    console.log('Data:', data);
+  };
+
   const handleSearch = () => {
     let url = `http://localhost:5050/api/oldPhoneDeals/phones/search?title=${searchQuery}&page=${page}&sort=${sort}`;
     if (brand) url += `&brand=${brand}`;
     if (maxPrice) url += `&maxPrice=${maxPrice}`;
-
+    console.log('Search URL:', url);
     fetch(url)
       .then(res => res.json())
       .then(data => {
+        console.log('Search results:', data);
         if (data.phones) {
           setSearchResults(data.phones);
           setTotalPages(data.totalPages);
@@ -46,6 +51,7 @@ const MainPage = () => {
         setTotalPages(1);
       });
   };
+
 
   const PhoneCard = ({ phone }) => (
     <div className="border rounded-lg p-4 shadow-md text-center">
@@ -111,8 +117,6 @@ const MainPage = () => {
               className="border p-2 rounded"
             >
               <option value="titleAsc">Title A-Z</option>
-              <option value="titleDesc">Title Z-A</option>
-              <option value="priceAsc">Price Low-High</option>
               <option value="priceDesc">Price High-Low</option>
             </select>
           </div>
@@ -125,41 +129,96 @@ const MainPage = () => {
       </div>
 
       {/* Search Results */}
-      {searchResults.length === 0 && searchQuery && <p className="text-center text-lg">No results found</p>}
-
-      {searchResults.length > 0 && (
-        <>
-          <h2 className="text-xl font-bold mb-4">Search Results</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {searchResults.map((phone) => (
-              <PhoneCard key={phone._id} phone={phone} />
-            ))}
+        {searchResults.length > 0 && (
+          <>
+            <h2 className="text-xl font-bold mb-4">Search Results</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {searchResults.map((phone) => (
+            <PhoneCard key={phone._id} phone={phone} />
+          ))}
+            </div>
+            <div className="flex justify-center gap-2 mt-4">
+          <button
+            onClick={() => {
+              setPage((prev) => Math.max(prev - 1, 1));
+              setTimeout(handleSearch, 0);
+            }}
+            disabled={page === 1}
+            className={`px-3 py-1 rounded ${page === 1 ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-gray-200 hover:bg-gray-300'}`}
+          >
+            Previous
+          </button>
+          {Array.from({ length: totalPages }, (_, idx) => (
+            <button
+              key={idx + 1}
+              onClick={() => {
+            setPage(idx + 1);
+            const newPage = idx + 1;
+            let url = `http://localhost:5050/api/oldPhoneDeals/phones/search?title=${searchQuery}&page=${newPage}&sort=${sort}`;
+            if (brand) url += `&brand=${brand}`;
+            if (maxPrice) url += `&maxPrice=${maxPrice}`;
+            console.log('Search URL:', url);
+            fetch(url)
+              .then(res => res.json())
+              .then(data => {
+                if (data.phones) {
+                  setSearchResults(data.phones);
+                  setTotalPages(data.totalPages);
+                } else {
+                  setSearchResults([]);
+                  setTotalPages(1);
+                }
+              })
+              .catch(err => {
+                console.error('Search error:', err);
+                setSearchResults([]);
+                setTotalPages(1);
+              });
+              }}
+              className={`px-3 py-1 rounded ${
+            page === idx + 1
+              ? 'bg-cyan-500 text-white'
+              : 'bg-gray-200 hover:bg-gray-300'
+              }`}
+            >
+              {idx + 1}
+            </button>
+          ))}
+          <button
+            onClick={() => {
+              setPage((prev) => Math.min(prev + 1, totalPages));
+              setTimeout(handleSearch, 0);
+            }}
+            disabled={page === totalPages}
+            className={`px-3 py-1 rounded ${page === totalPages ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-gray-200 hover:bg-gray-300'}`}
+          >
+            Next
+          </button>
+            </div>
+          </>
+        )}
+        
+        {searchQuery && searchResults.length === 0 && (
+          <>
+            {/*<p className="text-center text-lg">No results found</p>*/}
+          {/* Sold Out Soon */}
+          <div>
+            <h2 className="text-xl font-bold mb-4">Sold Out Soon</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {soldOutSoon.map((phone) => (
+                <PhoneCard key={phone._id} phone={phone} />
+              ))}
+            </div>
           </div>
 
-          <div className="flex justify-center gap-4 mt-4">
-            {page > 1 && (
-              <button
-                onClick={() => {
-                  setPage(page - 1);
-                  setTimeout(handleSearch, 0);
-                }}
-                className="bg-gray-200 px-4 py-2 rounded hover:bg-gray-300"
-              >
-                Previous
-              </button>
-            )}
-            <span className="px-4 py-2"> Page {page} of {totalPages} </span>
-            {page < totalPages && (
-              <button
-                onClick={() => {
-                  setPage(page + 1);
-                  setTimeout(handleSearch, 0);
-                }}
-                className="bg-gray-200 px-4 py-2 rounded hover:bg-gray-300"
-              >
-                Next
-              </button>
-            )}
+          {/* Best Sellers */}
+          <div>
+            <h2 className="text-xl font-bold mb-4">Best Sellers</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {bestSellers.map((phone) => (
+                <PhoneCard key={phone._id} phone={phone} />
+              ))}
+            </div>
           </div>
         </>
       )}
