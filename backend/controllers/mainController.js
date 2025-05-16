@@ -40,25 +40,29 @@ try {
 // Search phones by title (with optional brand and maxPrice filters)
 exports.searchPhones = async (req, res) => {
     try {
+       const { title, brand, maxPrice, page = 1, sort = 'titleAsc' } = req.query;
+    const query = { disabled: false };
+    if (title && title.trim() !== '') {
+      query.title = { $regex: title.trim(), $options: 'i' };
+    }
+    if (brand) query.brand = brand;
+    if (maxPrice) query.price = { $lte: Number(maxPrice) };
 
-        // debug Log
-        console.log(' SearchPhones triggered with query:', req.query);
-        const { title, brand, maxPrice} = req.query;
+    let sortOption = { title: 1 };
+    if (sort === 'titleDesc') sortOption = { title: -1 };
+    else if (sort === 'priceAsc') sortOption = { price: 1 };
+    else if (sort === 'priceDesc') sortOption = { price: -1 };
 
-        const query = { disabled: false};
+    const limit = 9;
+    const skip = (Number(page) - 1) * limit;
 
-        if (title) {
-            query.title = { $regex: title, $options: 'i'};
-        }
-        if (brand) {
-            query.brand = brand;
-        }
-        if (maxPrice) {
-            query.price = { $lte: Number(maxPrice)};
-        }
+    const [phones, totalCount] = await Promise.all([
+      Phone.find(query).sort(sortOption).skip(skip).limit(limit),
+      Phone.countDocuments(query),
+    ]);
 
-        const phones = await Phone.find(query);
-        res.json(phones);
+    const totalPages = Math.ceil(totalCount / limit);
+    return res.json({ phones, totalPages });
     } catch (err) {
         console.error('Error seraching phoenes:', err);
         res.status(500).json({error: 'Search failed'});
