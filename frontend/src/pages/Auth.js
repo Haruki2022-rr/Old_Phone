@@ -60,14 +60,20 @@ export function AuthPage() {
 
   return (
     <div className="max-w-md mx-auto mt-10 p-6 bg-white rounded-lg shadow-md">
-      <ToastContainer />  {/* placeholder for toast notify */}
-      <h1 className="text-2xl font-bold text-center text-gray-800 mb-6">
-        {mode === "login" && "Sign In"}
-        {mode === "signup" && "Create Account"}
-        {mode === "forgot" && "Reset Password"}
-      </h1>
-
-      {/* tabs */}
+      {/* placeholder for toast notify */}
+      <ToastContainer />
+        <button
+          type="button"
+          onClick={() => navigate("/")}
+          className="mb-4 px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 text-gray-700"
+        >
+          &larr; Back to Home
+        </button>
+        <h1 className="text-2xl font-bold text-center text-gray-800 mb-6">
+          {mode === "login" && "Sign In"}
+          {mode === "signup" && "Create Account"}
+          {mode === "forgot" && "Reset Password"}
+        </h1>
       <div className="flex justify-center mb-4 space-x-4">
         <button
           onClick={() => setMode("login")} // rerender AuthPage()
