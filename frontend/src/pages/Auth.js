@@ -1,7 +1,7 @@
 //reference: chatGPT -> told how I implemented banckend and gave detailed requirement to generate this code
 
-import React, { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import React, { useState, useEffect, useRef } from "react";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -10,6 +10,9 @@ import "react-toastify/dist/ReactToastify.css";
 // AUTH PAGE for Login, Sign‑Up, Forgot password
 export function AuthPage() {
   const navigate = useNavigate(); // navicate to another page 
+  const location = useLocation();
+  // where to go back to
+  const from = location.state?.from?.pathname || "/";
   const [mode, setMode] = useState("login"); // which mode we are on among login(default). signuo. reset 
   const [input, setInput] = useState({
     firstname: "",
@@ -17,6 +20,9 @@ export function AuthPage() {
     email: "",
     password: "",
   });
+
+  // 8+ chars, at least 1 upper, 1 lower, 1 digit, 1 symbol
+  const strongPassword = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$/;
 
   // when input changes, state changes
   const handleChange = (e) =>
@@ -32,9 +38,13 @@ export function AuthPage() {
           password: input.password,
         });
         toast.success("Logged in");
-        navigate("/profile", { replace: true }); // or previous page logic
+        navigate(from, { replace: true });
       } else if (mode === "signup") {
-        await axios.post("/auth/signup", input);
+        if (!strongPassword.test(input.password)) {
+          toast.error("Password must have at least 8 charcters including upper, lower, number and symbol.");
+          return;
+        }
+        await axios.post("/auth/signup",{ ...input, from });
         toast.success("Verification e‑mail sent");
         setMode("login");
         // navigate("/", { replace: true }); // or previous page logic
@@ -150,6 +160,9 @@ export function ResetPasswordPage() {
   const { token } = useParams(); // get :token part from URL
   const [passwords, setPasswords] = useState({ pw1: "", pw2: "" });
 
+  // 8+ chars, at least 1 upper, 1 lower, 1 digit, 1 symbol
+  const strongPassword = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$/;
+
   const handleChange = (e) =>
     setPasswords((p) => ({ ...p, [e.target.name]: e.target.value }));
 
@@ -158,12 +171,18 @@ export function ResetPasswordPage() {
     if (passwords.pw1 !== passwords.pw2) {
       return toast.error("Passwords do not match");
     }
+
+    if (!strongPassword.test(passwords.pw1)) {
+      toast.error("Password must have at least 8 charcters including upper, lower, number and symbol.");
+      return;
+    }
+    
     try {
       await axios.post(`/auth/resetPassword/${token}`, {
         password: passwords.pw1,
       });
       toast.success("Password changed");
-      navigate("/auth", { replace: true });
+      navigate("/", { replace: true });
     } catch (err) {
       toast.error(err.response?.data?.message || "Error resetting password");
     }
@@ -209,17 +228,26 @@ export function ResetPasswordPage() {
 export function VerifyEmailPage() {
     const { token } = useParams();
     const navigate    = useNavigate();
-  
+    const location   = useLocation();
+    const verified = useRef(false);
+
+    const params = new URLSearchParams(location.search);
+    const from  = params.get("from") || "/";
+
     // run only the first render unless token or navigate change
     useEffect(() => {
+      if (verified.current) return;
+      verified.current = true;   // to avoid to run twice
       (async () => {
         try {
           // callA API veryfyemail
-          const { result } = await axios.get(`/auth/verifyemail/${token}`);
-          if (result.success) {
+          const { data } = await axios.get(`/auth/verifyemail/${token}`,{	
+            withCredentials: true 
+            });
+          if (data.success) {
             toast.success("Email verified!");
             // JSON response should include your redirect target
-            navigate("/auth", { replace: true });
+            navigate(from, { replace: true }); 
           } else {
             throw new Error("Verification failed");
           }
@@ -229,7 +257,7 @@ export function VerifyEmailPage() {
           navigate("/auth", { replace: true });
         }
       })();
-    }, [token, navigate]);
+    }, [token, navigate, from]);
   
     return (
       <div className="max-w-md mx-auto p-6 mt-20 text-center">

@@ -14,44 +14,45 @@ const session = require("express-session");
 
 //allow cross origin from port 3000 to 5000/5050
 app.use(cors(
-    {origin: "http://localhost:3000",
-        methods: ["GET","POST","PUT","DELETE"],  // React’s dev server
-        credentials: true  }
+  {origin: "http://localhost:3000",
+  methods: ["GET","POST","PUT","DELETE"],  // React’s dev server
+  credentials: true  }
 ));
 
 app.use(express.json());
 
 // session
 app.use(
-    session({
-        secret: "topSecret",
-        resave: true,
-        saveUninitialized: true,
-        cookie: {
-            httpOnly: true,
-            maxAge: 7 * 24 * 60 * 60 * 1000
-        }
-    })
+  session({
+    secret: "topSecret",
+    resave: true,
+    saveUninitialized: true,
+    rolling: true, // reset cookie on every response (no expire with absolute maxAge)
+    cookie: {
+      httpOnly: true,
+      // 3days expire.   already tested for 30 sec and expired properly for login
+      maxAge: 3 * 24 * 60 * 60 * 1000
+      // for admin expire, this default will be override by adminConroller.js
+    }
+  })
 );
 
 // to check if user has logged in -> can be used in routes
 module.exports = function requireAuth(req, res, next) {
-    if (req.session && req.session.userId) return next();
-    return res.status(401).json({ message: "Not authenticated" });
+  if (req.session && req.session.userId) return next();
+  return res.status(401).json({ message: "Not authenticated" });
 };
 
 // at the URL path /images/<filename>
-app.use(
-    '/images',
-    express.static(path.join(__dirname, 'data', 'phone_default_images'))
-);
+
+app.use('/images', express.static(path.join(__dirname, 'data', 'phone_default_images')));
 
 // MongoDB Connection
 const db_uri = process.env.MONGO_URI;
 mongoose
-    .connect(db_uri)
-    .then(() => console.log('MongoDB connected'))
-    .catch(err => console.error('MongoDB connection error:', err));
+  .connect(db_uri)
+  .then(() => console.log('MongoDB connected'))
+  .catch(err => console.error('MongoDB connection error:', err));
 
 const mainRoutes = require('./routes/mainRoutes');
 //const reviewRoutes = require('./routes/reviewRoutes');
@@ -68,5 +69,5 @@ app.use("/api/oldPhoneDeals", oldPhoneDeals);
 
 // Start Server
 app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+ console.log(`Server running on port ${PORT}`);
 });

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import './tailwind.css';
 
@@ -13,6 +14,9 @@ const ProfilePage = () => {
         password: ""
     });
     
+    const navigate = useNavigate();
+    const loc = useLocation();
+
     const [draftUser, setDraftUser] = useState(user);
     const [hiddenPassword, setHiddenPassword] = useState({
         password: ""
@@ -411,8 +415,8 @@ const ProfilePage = () => {
                     <p className="mb-2"><strong>Price:</strong> ${selectedListing.price}</p>
                     <p className="mb-2"><strong>Stock:</strong> {selectedListing.stock}</p>
                     <img
-                        src={selectedListing.image}
-                        alt={"phone image"}
+                        src={`http://localhost:5050${selectedListing.image}`}
+                        alt={selectedListing.title}
                         className="w-full mt-4 rounded"
                     />
                 </div>
@@ -445,24 +449,14 @@ const ProfilePage = () => {
                         </div>
                         <div>
                             <label className="block text-gray-700">Brand:</label>
-                            <select
+                            <input
+                                type="text"
                                 name="brand"
                                 value={newListing.brand}
                                 onChange={handleNewListingChange}
                                 className="w-full px-4 py-2 border rounded"
                                 required
-                            >
-                                <option value="">Select Brand</option>
-                                <option value="Samsung">Samsung</option>
-                                <option value="Apple">Apple</option>
-                                <option value="HTC">HTC</option>
-                                <option value="Huawei">Huawei</option>
-                                <option value="Nokia">Nokia</option>
-                                <option value="LG">LG</option>
-                                <option value="Motorola">Motorola</option>
-                                <option value="Sony">Sony</option>
-                                <option value="BlackBerry">BlackBerry</option>
-                            </select>
+                            />
                         </div>
                         <div>
                             <label className="block text-gray-700">Image URL:</label>
@@ -591,7 +585,7 @@ const ProfilePage = () => {
                 <p className="text-gray-500 mt-4">You must be signed in to view this page.</p>
                 <button
                     className="px-6 py-2 font-semibold text-white bg-cyan-500 rounded-lg shadow-md hover:bg-cyan-600 mt-4"
-                    onClick={() => (window.location.href = "/auth")}
+                    onClick={() => navigate("/auth", { state: { from: loc } })}
                 >
                     Go to Login
                 </button>

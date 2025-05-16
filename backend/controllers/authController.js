@@ -1,15 +1,17 @@
 // reference: https://www.freecodecamp.org/news/how-to-secure-your-mern-stack-application/
 // reference: https://rajat-m.medium.com/how-to-set-up-email-verification-using-node-js-and-react-js-376e09b371e2
+// reference: chatGPT -> ask for help for small functinality and bug fix.
 const User = require("../models/User");
 const {sendVerificationEmail, sendResetPasswordEmail, sendConfirmationEmail} = require('../utils/email');
-const crypto = require("crypto")
+const crypto = require("crypto");
 const bcrypt = require("bcryptjs");
 const Phone = require("../models/Phone");
 
+const strongPassword = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$/;
 
 async function signup(req, res) {
     try {
-      const { firstname, lastname, email, password } = req.body;
+      const { firstname, lastname, email, password, from } = req.body;
       if(!firstname|| !lastname|| !email || !password ){
         return res.json({message:'All fields are required'})
       }
@@ -18,6 +20,12 @@ async function signup(req, res) {
         return res
             .status(409) //conflict
             .json({ message: "Account already exists" });
+      }
+
+      if (!strongPassword.test(password)) {
+        return res.status(400).json({
+          message: "Password must have at least 8 charcters including upper, lower, number and symbol."
+        });
       }
       // if the user is not exist -> create account
       // create document and insert into the User collection. user have a document that has been inserted.
@@ -32,7 +40,8 @@ async function signup(req, res) {
       
         // Build a verification URL. 
         const verificationUrl = 
-          `http://localhost:3000/verifyemail/${verificationToken}`;   
+          `http://localhost:3000/verifyemail/${verificationToken}` +
+          `?from=${encodeURIComponent(from)}`;   
       
         // send the mail
         const fullName = `${newUser.firstname} ${newUser.lastname}`;
@@ -225,6 +234,12 @@ async function resetPassword(req, res) {
       .json({ message: "Reset token is expired" });
   }
 
+  if (!strongPassword.test(req.body.password)) {
+    return res.status(400).json({
+      message: "Password must have at least 8 charcters including upper, lower, number and symbol."
+    });
+  }
+
   // set the new password (pre-save hook will hash it)
   user.password = req.body.password;
   user.passwordResetToken = undefined;
@@ -275,6 +290,8 @@ async function getCurrentUser(req, res) {
   const user = await User.findById(id).select("-password");
   res.json({ user });
 }
+
+
 
 async function updateProfile(req, res) {
 

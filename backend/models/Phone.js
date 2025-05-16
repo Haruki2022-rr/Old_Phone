@@ -10,10 +10,7 @@ const ReviewSchema = new mongoose.Schema({
 
 const PhoneSchema = new mongoose.Schema({
   title:    { type: String, required: true },
-  brand:    { type: String, required: true, enum: [
-                'Samsung','Apple','HTC','Huawei','Nokia',
-                'LG','Motorola','Sony','BlackBerry'
-            ]},
+  brand:    { type: String, required: true},
   image:    { type: String, required: true },       
   stock:    { type: Number, default: 0 },
 //   ObjectId refers to a document in the User model’s collection

@@ -4,9 +4,16 @@ const express = require("express");
 const User = require('../models/User');
 const Phone = require('../models/Phone');
 const { signup, emailVerification, login, logout, resetPassword, forgetPassword, getCurrentUser, updatePassword, updateProfile, removeListing, updateListing, hideComment, addListing } = require("../controllers/authController");
+const { adminAuthentication, adminUpdateUser, adminDeleteUser, adminEditListing, adminDeleteListing } = require("../controllers/adminController")
+const requireAuth = require('../middleware/requireAuth.js');
+
+const {getAdminLogs, createAdminLog} = require("../controllers/adminLogController");
 
 // Order Controller
-const { createOrder } = require("../controllers/orderController");
+const { createOrder,
+        getAllOrders,
+        getOrderById,
+        getOrdersByUser} = require("../controllers/OrderController");
 const Order = require("../models/Order");
 
 // add method to use controller function here
@@ -47,10 +54,34 @@ router.post("/auth/hideComment", hideComment);
 
 router.post("/auth/addListing", addListing);
 
-
-
 //get current use via cookie session /api/oldPhoneDeals/auth/getCurrentUser
 router.get("/auth/currentUser", getCurrentUser);
+
+// admin authentication
+router.post("/admin/authentication", adminAuthentication);
+
+
+router.post('/admin/adminUpdateUser', requireAuth, adminUpdateUser);
+
+router.post('/admin/adminDeleteUser', requireAuth, adminDeleteUser);
+
+router.post('/admin/adminEditListing', requireAuth, adminEditListing);
+
+router.post('/admin/adminDeleteListing', requireAuth, adminDeleteListing);
+
+// to access session date from frontend
+router.get('/admin/me', requireAuth, (req, res) => {
+    res.json({
+      adminId: req.session.adminId,
+      isAdmin: req.session.isAdmin
+    });
+  });
+
+
+
+
+
+
 
 router.get('/users', async (req, res) => {
     const users = await User.find();
@@ -62,7 +93,23 @@ router.get('/phones', async (req, res) => {
     res.json(phones);
 });
 
+// create new order from cart: /api/oldPhoneDeals/orders
 router.post('/orders', createOrder);
+
+// get all orders (admin only): /api/oldPhoneDeals/orders
+router.get('/orders', getAllOrders);
+
+// get order by ID (admin only): /api/oldPhoneDeals/orders/:id
+router.get('/orders/:id', getOrderById);
+
+// get all orders of a specific user: /api/oldPhoneDeals/orders/by-user/:userId
+router.get('/orders/by-user/:userId', getOrdersByUser);
+
+// get all admin logs: /api/oldPhoneDeals/admin/logs
+router.get('/admin/adminLogs', getAdminLogs);
+
+// // create a new admin log entry: /api/oldPhoneDeals/admin/logs
+// router.post('/admin/adminLogs', createAdminLog);
 
 
 

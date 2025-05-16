@@ -1,4 +1,5 @@
 import React, { useContext, useEffect, useState } from "react";
+import {useNavigate,useLocation } from 'react-router-dom';
 import { CartContext } from "../context/CartContext";
 import axios from "axios";
 
@@ -6,6 +7,8 @@ const CheckoutPage = () => {
     const { cartItems, updateQuantity, removeFromCart, clearCart } = useContext(CartContext);
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
+    const navigate = useNavigate();
+    const loc = useLocation();
 
     useEffect(() => {
         axios.get("http://localhost:5050/api/oldPhoneDeals/auth/currentUser", { withCredentials: true })
@@ -13,19 +16,20 @@ const CheckoutPage = () => {
                 setUser(res.data.user);
                 setLoading(false);
             })
-            .catch(err => {
-                console.error(err);
+            .catch(() => {
+                setUser(null);
                 setLoading(false);
             });
     }, []);
 
-    const total = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    const total = cartItems.reduce((sum, item) => sum+item.price* item.quantity, 0);
 
     const handleConfirmOrder = async () => {
         if (!user) {
             alert("You must be logged in to confirm the order.");
             return;
         }
+
         try {
             await axios.post("http://localhost:5050/api/oldPhoneDeals/orders", {
                 userId: user._id,
@@ -36,8 +40,10 @@ const CheckoutPage = () => {
                 })),
                 total,
             });
+
             alert("Order placed successfully!");
             clearCart();
+            localStorage.removeItem("cartItems");
         } catch (error) {
             console.error(error);
             alert("Failed to place order.");
@@ -46,6 +52,21 @@ const CheckoutPage = () => {
 
     if (loading) {
         return <p className="text-center mt-10">Loading...</p>;
+    }
+
+    if (!user) {
+        return (
+            <div className="max-w-4xl mx-auto mt-10 p-6 bg-white rounded-lg shadow-md text-center">
+                <h1 className="font-bold text-3xl text-gray-800">Checkout</h1>
+                <p className="text-gray-500 mt-4">You must be signed in to view this page.</p>
+                <button
+                    className="px-6 py-2 font-semibold text-white bg-cyan-500 rounded-lg shadow-md hover:bg-cyan-600 mt-4"
+                    onClick={navigate("/auth", { state: { from: loc } })}
+                >
+                    Go to Login
+                </button>
+            </div>
+        );
     }
 
     if (!cartItems.length) {
