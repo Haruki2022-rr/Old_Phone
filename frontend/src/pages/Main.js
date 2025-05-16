@@ -52,6 +52,13 @@ const MainPage = () => {
       });
   };
 
+  useEffect(() => {
+    if (searchQuery || brand || maxPrice || page !== 1) {
+      handleSearch();
+    }
+    // eslint-disable-next-line
+  }, [page]);
+
 
   const PhoneCard = ({ phone }) => (
     <div className="border rounded-lg p-4 shadow-md text-center">
@@ -113,22 +120,28 @@ const MainPage = () => {
               onChange={(e) => {
                 setSort(e.target.value);
                 setPage(1);
-              }}
-              className="border p-2 rounded"
-            >
-              <option value="titleAsc">Title A-Z</option>
-              <option value="priceDesc">Price High-Low</option>
-            </select>
-          </div>
-          <div className="self-end">
-            <button onClick={handleSearch} className="bg-cyan-500 text-white px-6 py-2 rounded hover:bg-cyan-600">
-              Search
-            </button>
-          </div>
-        </div>
-      </div>
+                }}
+                className="border p-2 rounded"
+              >
+                <option value="titleAsc">Title A-Z</option>
+                <option value="priceDesc">Price High-Low</option>
+              </select>
+              </div>
+              <div className="self-end">
+              <button
+                onClick={() => {
+                setPage(1);
+                handleSearch();
+                }}
+                className="bg-cyan-500 text-white px-6 py-2 rounded hover:bg-cyan-600"
+              >
+                Search
+              </button>
+              </div>
+            </div>
+            </div>
 
-      {/* Search Results */}
+            {/* Search Results */}
         {searchResults.length > 0 && (
           <>
             <h2 className="text-xl font-bold mb-4">Search Results</h2>
