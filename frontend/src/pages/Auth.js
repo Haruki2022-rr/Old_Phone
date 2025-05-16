@@ -21,6 +21,9 @@ export function AuthPage() {
     password: "",
   });
 
+  // 8+ chars, at least 1 upper, 1 lower, 1 digit, 1 symbol
+  const strongPassword = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$/;
+
   // when input changes, state changes
   const handleChange = (e) =>
     setInput((p) => ({ ...p, [e.target.name]: e.target.value }));
@@ -37,6 +40,10 @@ export function AuthPage() {
         toast.success("Logged in");
         navigate(from, { replace: true });
       } else if (mode === "signup") {
+        if (!strongPassword.test(input.password)) {
+          toast.error("Password must have at least 8 charcters including upper, lower, number and symbol.");
+          return;
+        }
         await axios.post("/auth/signup",{ ...input, from });
         toast.success("Verification e‑mail sent");
         setMode("login");
@@ -153,6 +160,9 @@ export function ResetPasswordPage() {
   const { token } = useParams(); // get :token part from URL
   const [passwords, setPasswords] = useState({ pw1: "", pw2: "" });
 
+  // 8+ chars, at least 1 upper, 1 lower, 1 digit, 1 symbol
+  const strongPassword = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$/;
+
   const handleChange = (e) =>
     setPasswords((p) => ({ ...p, [e.target.name]: e.target.value }));
 
@@ -161,6 +171,12 @@ export function ResetPasswordPage() {
     if (passwords.pw1 !== passwords.pw2) {
       return toast.error("Passwords do not match");
     }
+
+    if (!strongPassword.test(passwords.pw1)) {
+      toast.error("Password must have at least 8 charcters including upper, lower, number and symbol.");
+      return;
+    }
+    
     try {
       await axios.post(`/auth/resetPassword/${token}`, {
         password: passwords.pw1,

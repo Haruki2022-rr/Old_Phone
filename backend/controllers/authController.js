@@ -3,10 +3,11 @@
 // reference: chatGPT -> ask for help for small functinality and bug fix.
 const User = require("../models/User");
 const {sendVerificationEmail, sendResetPasswordEmail, sendConfirmationEmail} = require('../utils/email');
-const crypto = require("crypto")
+const crypto = require("crypto");
 const bcrypt = require("bcryptjs");
 const Phone = require("../models/Phone");
 
+const strongPassword = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$/;
 
 async function signup(req, res) {
     try {
@@ -19,6 +20,12 @@ async function signup(req, res) {
         return res
             .status(409) //conflict
             .json({ message: "Account already exists" });
+      }
+
+      if (!strongPassword.test(password)) {
+        return res.status(400).json({
+          message: "Password must have at least 8 charcters including upper, lower, number and symbol."
+        });
       }
       // if the user is not exist -> create account
       // create document and insert into the User collection. user have a document that has been inserted.
@@ -225,6 +232,12 @@ async function resetPassword(req, res) {
     return res
       .status(400)
       .json({ message: "Reset token is expired" });
+  }
+
+  if (!strongPassword.test(req.body.password)) {
+    return res.status(400).json({
+      message: "Password must have at least 8 charcters including upper, lower, number and symbol."
+    });
   }
 
   // set the new password (pre-save hook will hash it)
