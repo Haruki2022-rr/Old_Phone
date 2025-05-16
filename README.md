@@ -9,12 +9,14 @@ These instructions will get you a copy of the project up and running on your loc
 ### Prerequisites
 
 /backend
+
 npm install 
 
 /frontend
+
 npm install
 
-edit .env (MONGO_URI=your_local_db_path)
+edit .env with all of the required values(MONGO_URI=your_local_db_path)
 
 /backend 
 <!-- to import the JSON data to db -->
@@ -41,13 +43,13 @@ npm start
 
 ## Authors
 
-* **Billie Thompson** - *Initial work* - [PurpleBooth](https://github.com/PurpleBooth)
+* **William Qiu** 
+* **Haruki Hamada**
+* **Feilian Zhou**
+* **Ethan Hunt**
 
-See also the list of [contributors](https://github.com/your/project/contributors) who participated in this project.
 
 
 ## Acknowledgments
 
-* Hat tip to anyone whose code was used
-* Inspiration
-* etc
+* 
