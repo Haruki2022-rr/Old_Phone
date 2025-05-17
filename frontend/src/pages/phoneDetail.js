@@ -20,7 +20,7 @@ export default function PhoneDetail() {
   const [user,    setUser]    = useState(null);
 
   // reviews UI helpers
-  const [showCount,       setShowCount]   = useState(3);
+  //const [showCount,       setShowCount]   = useState(3);
   const [expandedIds,     setExpandedIds] = useState(new Set());
 
   // add-to-cart helpers
@@ -62,7 +62,7 @@ export default function PhoneDetail() {
     || (user && (String(rev.reviewer) === String(user._id) || isSeller));
 
   const visibleReviews = (phone.reviews || []).filter(maySee);
-  const pagedReviews   = visibleReviews.slice(0, showCount);
+  const pagedReviews   = visibleReviews;
 
   const isExpanded = id => expandedIds.has(id);
 
@@ -92,22 +92,22 @@ export default function PhoneDetail() {
     }
   };
 
-  const toggleHidden = async (reviewId) => {
+  const toggleHiddenAuth = async (reviewId, phoneId) => {
     try {
-      const { data } = await axios.patch(
-        `/phones/${id}/reviews/${reviewId}`
+      await axios.post(
+        "/auth/hideComment",
+        {
+          comment: reviewId,
+          commentDetails: { _id: phoneId }
+        }
       );
-      // reload or update locally
-      setPhone(p => ({
-        ...p,
-        reviews: p.reviews.map(r =>
-          String(r._id) === reviewId ? { ...r, hidden: data.hidden } : r
-        )
-      }));
+      const { data } = await axios.get(`/phones/${phoneId}`);
+      setPhone(data);
     } catch (err) {
-      alert(err.response?.data?.error || 'Failed');
+      alert(err.response?.data?.message || "Failed to toggle review");
     }
   };
+
 
   /* ------------------------------------------------------------------ */
   /* cart actions                                                        */
@@ -192,20 +192,24 @@ export default function PhoneDetail() {
             <p className="whitespace-pre-wrap">
               { long ? (showAll ? r.comment : cut + '…') : r.comment }
             </p>
+                {long && (
+                    <button
+                        onClick={() => toggleExpand(r._id)}
+                        className="text-sm text-blue-600 underline mt-1"
+                    >
+                        {showAll ? 'Show less' : 'Show more'}
+                    </button>
+                    )}
+    
 
-            { long && (
-              <button onClick={()=>toggleExpand(r._id)}
-                      className="text-sm text-blue-600 underline mt-1">
-                {showAll ? 'Show less' : 'Show more'}
-              </button>
-            )}
-
-            {canToggle && (
-              <button onClick={()=>toggleHidden(r._id)}
-                      className="ml-4 text-sm text-red-600 underline">
-                {r.hidden ? 'Un-Hide' : 'Hide'}
-              </button>
-            )}
+            {user && (user._id === r.reviewer || user._id === phone.seller?._id) && (
+                 <button
+                    onClick={() => toggleHiddenAuth(r._id, phone._id)}
+                    className="text-sm text-red-500 underline ml-2"
+                  >
+                    {r.hidden ? 'Unhide' : 'Hide'}
+                  </button>
+                )}
           </div>
         );
       })}
@@ -214,13 +218,7 @@ export default function PhoneDetail() {
         <p className="mb-6">No reviews yet.</p>
       )}
 
-      {visibleReviews.length > showCount && (
-        <button onClick={()=>setShowCount(c=>c+3)}
-                className="bg-gray-200 px-4 py-1 rounded mb-6">
-          Show more reviews
-        </button>
-      )}
-
+      
       {/* --------- add review form --------- */}
       {user && (
         <div className="mt-10">
