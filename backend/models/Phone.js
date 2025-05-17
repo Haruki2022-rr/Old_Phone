@@ -6,7 +6,7 @@ const ReviewSchema = new mongoose.Schema({
   rating:   { type: Number },
   comment:  { type: String },
   hidden:   { type: Boolean, default: false }
-}, {_id: false});
+});
 
 const PhoneSchema = new mongoose.Schema({
   title:    { type: String, required: true },
