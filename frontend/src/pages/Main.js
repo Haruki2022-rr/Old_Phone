@@ -152,7 +152,7 @@ const MainPage = () => {
                 <option value="priceDesc">Price High-Low</option>
               </select>
               </div>
-              <div className="self-end">
+              <div>
               <button
                 onClick={() => {
                   if (page === 1) {
