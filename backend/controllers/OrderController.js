@@ -11,13 +11,26 @@ exports.createOrder = async (req, res) => {
             return res.status(400).json({ message: 'Invalid order' });
         }
 
+        //get the user
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: 'user not valid' });
+        }
+
         const order = new Order({
             user: userId,
+            // keep the snapshot
+            userSnapshot: {
+                name: `${user.firstname} ${user.lastname}`,
+                email: user.email
+            },
 
             items: cartItems.map(item => ({
                 phone: item.phoneId,
                 quantity: item.quantity,
                 price: item.price,
+                titleSnapshot: item.title,
+                brandSnapshot: item.brand,
             })),
             total,
         });
