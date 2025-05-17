@@ -29,6 +29,9 @@ const AdminReviews = ({ reviews, setReviews, showMessage }) => {
         } else if (sortField === 'listing') {
             valA = a.listing.title.toLowerCase();
             valB = b.listing.title.toLowerCase();
+        }else if(sortField === 'rating'){
+            valA = a.rating;
+            valB = b.rating;
         } else {
             valA = (a[sortField] || '').toLowerCase();
             valB = (b[sortField] || '').toLowerCase();
@@ -124,18 +127,20 @@ const AdminReviews = ({ reviews, setReviews, showMessage }) => {
                 <table className="min-w-full table-fixed bg-white border border-gray-200">
                     <thead className="bg-gray-50">
                     <tr>
-                        {['name', 'listing', 'comment', 'hidden'].map(header => (
+                        {['name', 'listing', 'comment', 'rating', 'hidden'].map(header => (
                             <th
                                 key={header}
                                 className={
                                     "text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer " +
                                     (header === 'name'
-                                        ? 'w-1/6 px-4 py-3'
+                                        ? 'w-2/12 px-4 py-3'
                                         : header === 'listing'
-                                            ? 'w-1/4 px-4 py-3'
+                                            ? 'w-3/12 px-4 py-3'
                                             : header === 'comment'
-                                                ? 'w-2/6 px-4 py-3'
-                                                : 'w-1/6 px-4 py-3')
+                                                ? 'w-3/12 px-4 py-3'
+                                                : header === 'rating'
+                                                    ? 'w-2/12 px-4 py-3'
+                                                : 'w-1/12 px-4 py-3')
                                 }
                                 onClick={() => handleSort(header)}
                             >
@@ -145,13 +150,15 @@ const AdminReviews = ({ reviews, setReviews, showMessage }) => {
                                         ? 'Listing'
                                         : header === 'hidden'
                                             ? 'Visibility'
-                                            : header.charAt(0).toUpperCase() + header.slice(1)}
+                                            : header === 'rating'
+                                                ? 'Rating'
+                                                : header.charAt(0).toUpperCase() + header.slice(1)}
                                 <span className="inline-block w-3">
-                                    {sortField === header && (sortOrder === 'asc' ? '▲' : '▼')}
+                                    {sortField === header ? (sortOrder === 'asc' ? '▲' : '▼') : '▲'}
                                 </span>
                             </th>
                         ))}
-                        <th className="w-1/6 px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="w-1/12 px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Actions
                         </th>
                     </tr>
@@ -169,11 +176,14 @@ const AdminReviews = ({ reviews, setReviews, showMessage }) => {
                             <td className="px-4 py-4 text-sm text-gray-900 break-words whitespace-pre-wrap">
                                 {review.comment}
                             </td>
+                            <td className="px-4 py-4 text-sm text-gray-900 break-words whitespace-pre-wrap">
+                                {review.rating}
+                            </td>
                             <td className="px-4 py-4 text-sm">
                             <span
                                 className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                review.hidden ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'
-                            }`}
+                                    review.hidden ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'
+                                }`}
                             >
                                 {review.hidden ? 'Hidden' : 'Visible'}
                             </span>
