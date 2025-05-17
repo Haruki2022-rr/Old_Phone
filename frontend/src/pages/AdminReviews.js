@@ -7,13 +7,14 @@ const AdminReviews = ({ reviews, setReviews, showMessage }) => {
     const [selectedReview, setSelectedReview] = useState(null);
 
     const [searchTerm, setSearchTerm] = useState('');
-    const filteredReviews = reviews.filter(review =>
-        review.name.toLowerCase().includes(reviewSearchTerm.toLowerCase()) ||
+    const filteredReviews = reviews.filter ( (review =>
+        review.listing && //filter review without listing.
+        (review.name.toLowerCase().includes(reviewSearchTerm.toLowerCase()) ||
         review.comment.toLowerCase().includes(reviewSearchTerm.toLowerCase()) ||
         review.listing.title.toLowerCase().includes(reviewSearchTerm.toLowerCase()) ||
         review.listing._id.toLowerCase().includes(reviewSearchTerm.toLowerCase()) ||
-        review.reviewer.toLowerCase().includes(reviewSearchTerm.toLowerCase())
-    );
+        review.reviewer.toLowerCase().includes(reviewSearchTerm.toLowerCase()))
+    ));
 
     //sorting
     const [sortField, setSortField] = useState('name');
