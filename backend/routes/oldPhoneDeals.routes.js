@@ -113,5 +113,4 @@ router.get('/admin/adminLogs', getAdminLogs);
 // router.post('/admin/adminLogs', createAdminLog);
 
 
-
 module.exports = router;
