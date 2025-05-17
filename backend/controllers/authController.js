@@ -45,8 +45,20 @@ async function signup(req, res) {
       
         // send the mail
         const fullName = `${newUser.firstname} ${newUser.lastname}`;
-        await sendVerificationEmail({ name: fullName, email: newUser.email }, verificationUrl);
       
+        try {
+          await sendVerificationEmail(
+            { name: fullName, email: newUser.email },
+            verificationUrl
+          );
+        } catch (mailErr) {
+          // On failure, remove the just‐created user
+          await User.deleteOne({ _id: newUser._id });
+          console.error("Failed to send verification email:", mailErr);
+          return res
+            .status(500)
+            .json({ message: "Could not send verification e-mail. Please try again." });
+        }
         // Respond to the client
         res.status(201).json({
           success: true,
