@@ -580,23 +580,37 @@ const ProfilePage = () => {
 
     if (!user || !user._id) {
         return (
-            <div className="profile-container max-w-4xl mx-auto mt-10 p-6 bg-white rounded-lg shadow-md">
-                <h1 className="font-bold text-3xl text-gray-800">Profile</h1>
-                <p className="text-gray-500 mt-4">You must be signed in to view this page.</p>
+            <div className="profile-container max-w-lg mx-auto mt-20 p-8 bg-white rounded-xl shadow-lg flex flex-col items-center">
+            <button
+                className="self-start mb-6 px-4 py-2 font-semibold text-cyan-500 bg-gray-100 rounded-lg shadow hover:bg-gray-200"
+                onClick={() => navigate(-1)}
+            >
+                &larr; Back
+            </button>
+            <h1 className="font-bold text-4xl text-cyan-600 mb-4">Profile</h1>
+            <div className="flex flex-col items-center">
+                <p className="text-gray-600 text-lg mb-2 text-center">You must be signed in to view this page.</p>
                 <button
-                    className="px-6 py-2 font-semibold text-white bg-cyan-500 rounded-lg shadow-md hover:bg-cyan-600 mt-4"
-                    onClick={() => navigate("/auth", { state: { from: loc } })}
+                className="px-6 py-2 font-semibold text-white bg-cyan-500 rounded-lg shadow-md hover:bg-cyan-600 mt-4"
+                onClick={() => navigate("/auth", { state: { from: loc } })}
                 >
-                    Go to Login
+                Go to Login
                 </button>
+            </div>
             </div>
         );
     }
 
     return (
         <div className="profile-container max-w-4xl mx-auto mt-10 p-6 bg-white rounded-lg shadow-md">
-            <div className="profile-header flex items-center justify-between">
-                <h1 className="font-bold text-3xl text-gray-800">Profile</h1>
+            <div className="flex items-center justify-between">
+                <button
+                    className="px-4 py-2 font-semibold text-cyan-500 bg-gray-100 rounded-lg shadow hover:bg-gray-200"
+                    onClick={() =>  navigate(-1)}
+                >
+                    &larr; Back
+                </button>
+                <h1 className="font-bold text-3xl text-gray-800 flex-1 text-center">Profile</h1>
                 <button
                     className="px-6 py-2 font-semibold text-white bg-red-500 rounded-lg shadow-md hover:bg-red-600"
                     onClick={handleSignOut}
