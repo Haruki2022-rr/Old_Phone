@@ -5,6 +5,8 @@ exports.addReview = async (req, res) => {
         console.log("Request body:", req.body); // Log request body
         console.log("Request params:", req.params); // Log request params
 
+
+
         const { rating, comment } = req.body;
         const phone = await Phone.findById(req.params.id);
 
@@ -24,7 +26,7 @@ exports.addReview = async (req, res) => {
     } catch (err) {
         console.log("Error in making the review");
          console.error('addReview error →', err);
-        res.status(400).json({ error: 'Failed to add review AHHHHHH' });
+        res.status(400).json({ error: 'Failed to add review' });
     }
 };
 

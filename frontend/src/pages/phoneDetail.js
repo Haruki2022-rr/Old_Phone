@@ -92,19 +92,20 @@ export default function PhoneDetail() {
     }
   };
 
-  const toggleHiddenAuth = async (reviewId, phoneId, reviewerId) => {
+  const toggleHidden = async (reviewId) => {
     try {
-      await axios.post(
-        "/auth/hideComment",
-        {
-          comment: reviewerId,
-          commentDetails: { _id: phoneId }
-        }
+      const { data } = await axios.post(
+        `/phones/${phone._id}/reviews/${reviewId}/toggle` 
       );
-      const { data } = await axios.get(`/phones/${phoneId}`);
-      setPhone(data);
+      // reload or update locally
+      setPhone(p => ({
+        ...p,
+        reviews: p.reviews.map(r =>
+          String(r._id) === reviewId ? { ...r, hidden: data.hidden } : r
+        )
+      }));
     } catch (err) {
-      alert(err.response?.data?.message || "Failed to toggle review");
+      alert(err.response?.data?.error || 'Failed');
     }
   };
 
@@ -204,7 +205,7 @@ export default function PhoneDetail() {
 
             {user && (user._id === r.reviewer || user._id === phone.seller?._id) && (
                  <button
-                    onClick={() => toggleHiddenAuth(r._id, phone._id, r.reviewer)}
+                    onClick={() => toggleHidden(r._id)}
                     className="text-sm text-red-500 underline ml-2"
                   >
                     {r.hidden ? 'Unhide' : 'Hide'}

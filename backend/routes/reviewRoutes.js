@@ -4,7 +4,7 @@ const requireUser = require('../middleware/requireUser');
 const router = express.Router();
 router.post('/phones/:id/reviews', requireUser, reviewController.addReview);
 
-router.put('/phones/:phoneId/reviews/:reviewId/toggle',requireUser, reviewController.toggleReviewHidden);
+router.post('/phones/:phoneId/reviews/:reviewId/toggle',requireUser, reviewController.toggleReviewHidden);
 
 
 module.exports = router;
