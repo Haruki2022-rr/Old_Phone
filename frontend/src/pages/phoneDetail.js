@@ -92,12 +92,12 @@ export default function PhoneDetail() {
     }
   };
 
-  const toggleHiddenAuth = async (reviewId, phoneId) => {
+  const toggleHiddenAuth = async (reviewId, phoneId, reviewerId) => {
     try {
       await axios.post(
         "/auth/hideComment",
         {
-          comment: reviewId,
+          comment: reviewerId,
           commentDetails: { _id: phoneId }
         }
       );
@@ -204,7 +204,7 @@ export default function PhoneDetail() {
 
             {user && (user._id === r.reviewer || user._id === phone.seller?._id) && (
                  <button
-                    onClick={() => toggleHiddenAuth(r._id, phone._id)}
+                    onClick={() => toggleHiddenAuth(r._id, phone._id, r.reviewer)}
                     className="text-sm text-red-500 underline ml-2"
                   >
                     {r.hidden ? 'Unhide' : 'Hide'}
