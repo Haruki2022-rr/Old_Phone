@@ -49,11 +49,18 @@ const AdminSales = ({sales}) => {
             valA = new Date(a.createdAt);
             valB = new Date(b.createdAt);
         } else if (sortField === 'buyer') {
-            valA = a.user ? `${a.user.firstname} ${a.user.lastname}`.toLowerCase() : '';
-            valB = b.user ? `${b.user.firstname} ${b.user.lastname}`.toLowerCase() : '';
+            valA = a.user
+                ? `${a.user.firstname} ${a.user.lastname}`.toLowerCase()
+                : (a.userSnapshot?.name || '').toLowerCase();
+            valB = b.user
+                ? `${b.user.firstname} ${b.user.lastname}`.toLowerCase()
+                : (b.userSnapshot?.name || '').toLowerCase();
         } else if (sortField === 'items') {
-            valA = a.items.map(i => i.phone?.title || '').join(', ').toLowerCase();
-            valB = b.items.map(i => i.phone?.title || '').join(', ').toLowerCase();
+            valA = a.items.map(i => i.titleSnapshot || '').join(', ').toLowerCase();
+            valB = b.items.map(i => i.titleSnapshot || '').join(', ').toLowerCase();
+        } else if (sortField === 'total') {
+            valA = a.total;
+            valB = b.total;
         }
 
         if (valA < valB) return sortOrder === 'asc' ? -1 : 1;
@@ -137,6 +144,8 @@ const AdminSales = ({sales}) => {
 
         alert(`Sales data export completed as ${format}.`);
     };
+
+
     return (
         <section>
             <h2 className="text-2xl font-semibold mb-4 text-gray-700">Sales and Activity Logs</h2>
@@ -167,17 +176,24 @@ const AdminSales = ({sales}) => {
                 <table className="min-w-full table-fixed bg-white border border-gray-200">
                     <thead className="bg-gray-50">
                     <tr>
-                        {['timestamp', 'buyer', 'items'].map(header => (
+                        {['timestamp', 'buyer', 'items', 'total'].map(header => (
                             <th
                                 key={header}
                                 className={
                                     "px-6 py-3 cursor-pointer text-left text-xs font-medium text-gray-500 uppercase tracking-wider " +
-                                    (header === 'timestamp' ? 'w-1/4' : header === 'buyer' ? 'w-1/4' : 'w-2/4')
+                                    (header === 'timestamp' ? 'w-1/6'
+                                        : header === 'buyer' ? 'w-1/6'
+                                            : header === 'items' ? 'w-3/6'
+                                                    : 'w-1/6'
+                                    )
                                 }
                                 onClick={() => handleSort(header)}
                             >
                                 {header === 'timestamp' ? 'Timestamp' :
-                                    header === 'buyer' ? 'Buyer' : 'Items Purchased'}
+                                    header === 'buyer' ? 'Buyer' :
+                                        header === 'items' ? 'Items Purchased':
+                                            'total'
+                                }
                                 <span className="inline-block w-3">
                                     {sortField === header && (sortOrder === 'asc' ? '▲' : '▼')}
                                  </span>
@@ -188,14 +204,17 @@ const AdminSales = ({sales}) => {
                     <tbody className="bg-white divide-y divide-gray-200">
                     {paginatedSales.map(sale => (
                         <tr key={sale._id}>
-                            <td className="px-6 py-4 text-sm text-gray-500 break-words whitespace-pre-wrap w-1/4">
+                            <td className="w-1/6 px-6 py-4 text-sm text-gray-500 break-words whitespace-pre-wrap w-1/4">
                                 {formatDate(sale.createdAt)}
                             </td>
-                            <td className="px-6 py-4 text-sm text-gray-500 break-words whitespace-pre-wrap w-1/4">
-                                {sale.user ? `${sale.user.firstname} ${sale.user.lastname}` : 'N/A'}
+                            <td className="w-1/6 px-6 py-4 text-sm text-gray-500 break-words whitespace-pre-wrap w-1/4">
+                                {sale.user ? `${sale.user.firstname} ${sale.user.lastname}` : `${sale.userSnapshot.name}`}
                             </td>
-                            <td className="px-6 py-4 text-sm text-gray-500 break-words whitespace-pre-wrap w-2/4">
-                                {sale.items.map(item => `${item.phone?.title || 'Unknown'} (Qty: ${item.quantity})`).join(', ')}
+                            <td className="w-3/6 px-6 py-4 text-sm text-gray-500 break-words whitespace-pre-wrap w-2/4">
+                                {sale.items.map(item => `${item.titleSnapshot} (Qty: ${item.quantity})`).join(', ')}
+                            </td>
+                            <td className="w-1/6 px-6 py-4 text-sm text-gray-500 break-words whitespace-pre-wrap w-2/4">
+                                {sale.total.toString()} $
                             </td>
                         </tr>
                     ))}
@@ -234,7 +253,7 @@ const AdminSales = ({sales}) => {
                     {sales.slice(0, 3).map(sale => (
                         <li key={sale._id}>
                             Order #{sale._id.slice(-4)} placed by{' '}
-                            {sale.user ? `${sale.user.firstname} ${sale.user.lastname}` : 'Unknown'} for{' '}
+                            {sale.user ? `${sale.user.firstname} ${sale.user.lastname}` : `${sale.userSnapshot.name}`} for{' '}
                             {sale.items.map(item => item.phone?.title || 'an item').join(', ')} on{' '}
                             {new Date(sale.createdAt).toLocaleString()}.
                         </li>

@@ -6,6 +6,11 @@ const OrderSchema = new mongoose.Schema({
         ref: 'User',
         required: true
     },
+    //keep the information of user even user is deleted
+    userSnapshot: {
+        name: String,
+        email: String
+    },
     items: [
         {
             phone: {
@@ -20,7 +25,10 @@ const OrderSchema = new mongoose.Schema({
             price: {
                 type: Number,
                 required: true
-            }
+            },
+            //keep the phone information
+            titleSnapshot: String,
+            brandSnapshot: String,
         }
     ],
     total: {

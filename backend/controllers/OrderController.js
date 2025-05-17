@@ -11,14 +11,41 @@ exports.createOrder = async (req, res) => {
             return res.status(400).json({ message: 'Invalid order' });
         }
 
-        const order = new Order({
-            user: userId,
+        //get the user
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: 'user not valid' });
+        }
 
-            items: cartItems.map(item => ({
-                phone: item.phoneId,
+
+        const itemSnapshot = [];
+        for (const item of cartItems) {
+            const phone = await Phone.findById(item.phoneId);
+
+            if (!phone) {
+                console.warn(`Phone not found for ID: ${item.phoneId}`);
+                continue; // skip if phone not found
+            }
+
+            itemSnapshot.push({
+                phone: phone._id,
                 quantity: item.quantity,
                 price: item.price,
-            })),
+                titleSnapshot: phone.title,     // create snapshot
+                brandSnapshot: phone.brand      // create snapshot
+            });
+
+        }
+
+        const order = new Order({
+            user: userId,
+            // keep the snapshot
+            userSnapshot: {
+                name: `${user.firstname} ${user.lastname}`,
+                email: user.email
+            },
+
+            items: itemSnapshot,
             total,
         });
 
@@ -31,6 +58,7 @@ exports.createOrder = async (req, res) => {
                 console.warn(`Phone not found for ID: ${item.phoneId}`);
                 continue; // skip if phone not found
             }
+
 
             const newStock = Math.max(0, phone.stock - item.quantity);
             phone.stock = newStock;

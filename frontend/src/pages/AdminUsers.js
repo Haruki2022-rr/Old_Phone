@@ -50,7 +50,7 @@ const AdminUsers = ({ users, setUsers, listings, reviews, showMessage }) => {
         if (sortField === 'fullname') {
             valA = `${a.firstname || ''} ${a.lastname || ''}`.toLowerCase();
             valB = `${b.firstname || ''} ${b.lastname || ''}`.toLowerCase();
-        } else if (sortField === 'lastLogin') {
+        } else if (sortField === 'lastLogin' || sortField === 'createdAt') {
             valA = new Date(a.lastLogin || 0);
             valB = new Date(b.lastLogin || 0);
         } else {

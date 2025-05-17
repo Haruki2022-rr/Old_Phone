@@ -44,6 +44,7 @@ const CheckoutPage = () => {
             alert("Order successfully");
             clearCart();
             localStorage.removeItem("cartItems");
+            navigate('/'); //return to main after complete order
         } catch (error) {
             console.error(error);
             alert("Failed to place order.");
@@ -63,25 +64,24 @@ const CheckoutPage = () => {
         return <p className="text-center mt-10">Loading...</p>;
     }
 
-    // if (!user) {
-    //     return (
-    //         <div className="max-w-4xl mx-auto mt-10 p-6 bg-white rounded-lg shadow-md text-center">
-    //             {backBtn}
-    //             <h1 className="font-bold text-3xl text-gray-800">Checkout</h1>
-    //             <p className="text-gray-500 mt-4">You must be signed in to view this page.</p>
-    //             <button
-    //                 className="px-6 py-2 font-semibold text-white bg-cyan-500 rounded-lg shadow-md hover:bg-cyan-600 mt-4"
-    //                 onClick={navigate("/auth", { state: { from: loc } })}
-    //             >
-    //                 Go to Login
-    //             </button>
-    //         </div>
-    //     );
-    // }
+    if (!user) {
+        return (
+            <div className="max-w-4xl mx-auto mt-10 p-6 bg-white rounded-lg shadow-md text-center">
+                {backBtn}
+                <h1 className="font-bold text-3xl text-gray-800">Checkout</h1>
+                <p className="text-gray-500 mt-4">You must be signed in to view this page.</p>
+                <button
+                    className="px-6 py-2 font-semibold text-white bg-cyan-500 rounded-lg shadow-md hover:bg-cyan-600 mt-4"
+                    onClick={navigate("/auth", { state: { from: loc } })}
+                >
+                    Go to Sign in page
+                </button>
+            </div>
+        );
+    }
 
     if (!cartItems.length) {
         return (
-
             <div className="max-w-2xl mx-auto mt-10 p-6 bg-white rounded-lg shadow-md">
                 {backBtn}
                 <h1 className="text-2xl font-bold mb-4 text-center">Your Cart is Empty</h1>

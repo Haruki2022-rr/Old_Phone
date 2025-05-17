@@ -15,6 +15,7 @@ const AdminLists = ({ listings, setListings, users, reviews,showMessage}) => {
 
     const filteredListings = listings.filter(listing => {
         const seller = users.find(u => u._id === listing.seller);
+     //   if (!seller) return null; //if the user is deleted, not display
         const sellerName = seller ? `${seller.firstname} ${seller.lastname}`.toLowerCase() : '';
         return (
             listing.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
