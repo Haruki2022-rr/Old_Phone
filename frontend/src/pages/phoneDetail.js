@@ -54,6 +54,12 @@ const PhoneDetail = () => {
 
     return (
         <div className="max-w-3xl mx-auto p-6 bg-white shadow rounded">
+            <button
+                className="px-4 py-2 font-semibold text-cyan-500 bg-gray-100 rounded-lg shadow hover:bg-gray-200 mb-6"
+                onClick={() => navigate(-1)}
+            >
+                &larr; Back
+            </button>
             <img
                 src={`http://localhost:5050${phone.image}`}
                 alt={phone.title}

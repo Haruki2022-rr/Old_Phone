@@ -13,6 +13,7 @@ exports.createOrder = async (req, res) => {
 
         const order = new Order({
             user: userId,
+
             items: cartItems.map(item => ({
                 phone: item.phoneId,
                 quantity: item.quantity,
