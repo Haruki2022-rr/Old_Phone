@@ -44,9 +44,17 @@ export function AuthPage() {
           toast.error("Password must have at least 8 charcters including upper, lower, number and symbol.");
           return;
         }
-        await axios.post("/auth/signup",{ ...input, from });
-        toast.success("Verification e‑mail sent");
-        setMode("login");
+        try {
+          const res = await axios.post("/auth/signup", { ...input, from });
+            if (res.data?.success) {
+              toast.success(res.data.message);
+                 setMode("login");
+               } else {
+                 toast.error(res.data?.message || "Failed to send verification email");
+               }
+             } catch (err) {
+               toast.error(err.response?.data?.message || "Error sending verification email");
+             }
         // navigate("/", { replace: true }); // or previous page logic
       } else if (mode === "forgot") {
         await axios.post("/auth/forgetPassword", { email: input.email });

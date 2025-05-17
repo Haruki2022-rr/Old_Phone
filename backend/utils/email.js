@@ -33,8 +33,10 @@ const sendVerificationEmail = async (user, verificationUrl) => {
   try {
     const response = await mailerSend.email.send(emailParams);
     console.log("Verification email sent successfully:", response);
+    return response;
   } catch (error) {
     console.error("Error sending verification email:", error);
+    throw error;
   }
 };
 
