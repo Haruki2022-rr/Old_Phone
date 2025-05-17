@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext} from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 
 import './tailwind.css';
+import { CartContext } from "../context/CartContext";
 
 const MainPage = () => {
   const [soldOutSoon, setSoldOutSoon] = useState([]);
@@ -15,6 +16,24 @@ const MainPage = () => {
   const [page, setPage] = useState(0);
   const [sort, setSort] = useState('titleAsc');
   const [totalPages, setTotalPages] = useState(1);
+
+  const [user, setUser] = useState(null);
+  const { clearCart } = useContext(CartContext);
+
+    // Fetch user once on mount
+    useEffect(() => {
+        axios.get("/auth/currentUser")
+            .then(res => {
+                const fetched = res.data.user;
+                console.log(fetched);
+                setUser(fetched);
+            })
+            .catch(err => {
+                console.error(err);
+                console.log('clear cart');
+                clearCart()});
+    }, []);
+
 
   useEffect(() => {
     fetch('http://localhost:5050/api/oldPhoneDeals/phones/soldoutsoon')
@@ -75,6 +94,18 @@ const MainPage = () => {
     // eslint-disable-next-line
   }, [page]);
 
+    const handleSignOut = () => {
+        axios.post("/auth/logout")
+            .then(() => {
+                alert("You have been signed out.");
+                window.location.href = "/";
+            })
+            .catch(err => {
+                console.error(err);
+                alert("Error signing out. Please try again.");
+            });
+    };
+
 
   const PhoneCard = ({ phone }) => (
     <div className="border rounded-lg p-4 shadow-md text-center">
@@ -97,9 +128,18 @@ const MainPage = () => {
     <div className="App  min-h-screen p-4">
       <h1 className="text-4xl font-bold text-center text-blue-600 mb-6">Old Phone Deals</h1>
       <nav className="flex justify-center space-x-4 mb-6">
-        <Link to="/auth" className="text-lg text-gray-700 hover:text-blue-500">Auth</Link>
+          {!user ? (<Link to="/auth" className="text-lg text-gray-700 hover:text-blue-500">Sign in</Link>) :
+              (<>
+                  <Link to="/profile" className="text-lg text-gray-700 hover:text-blue-500">Profile</Link>
+              <button
+              className="text-lg text-gray-700 hover:text-blue-500"
+              onClick={handleSignOut}>
+                 Sign Out
+             </button>
+            </>)}
+
         <Link to="/checkout" className="text-lg text-gray-700 hover:text-blue-500">Checkout</Link>
-        <Link to="/profile" className="text-lg text-gray-700 hover:text-blue-500">Profile</Link>
+
       </nav>
       <div className="bg-white shadow-md rounded-lg p-6">
 
