@@ -88,7 +88,6 @@ async function adminDeleteUser(req, res) {
     } catch (error) {
         console.error(error);
     }
-
 }
 async function adminEditListing(req, res) {
     try {

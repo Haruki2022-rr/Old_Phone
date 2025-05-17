@@ -8,7 +8,7 @@ const AdminReviews = ({ reviews, setReviews, showMessage }) => {
 
     const [searchTerm, setSearchTerm] = useState('');
     const filteredReviews = reviews.filter ( (review =>
-        review.listing && //filter review without listing.
+        //review.listing && //filter review without listing.
         (review.name.toLowerCase().includes(reviewSearchTerm.toLowerCase()) ||
         review.comment.toLowerCase().includes(reviewSearchTerm.toLowerCase()) ||
         review.listing.title.toLowerCase().includes(reviewSearchTerm.toLowerCase()) ||

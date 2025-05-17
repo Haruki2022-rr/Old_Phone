@@ -44,6 +44,7 @@ const CheckoutPage = () => {
             alert("Order successfully");
             clearCart();
             localStorage.removeItem("cartItems");
+            navigate('/'); //return to main after complete order
         } catch (error) {
             console.error(error);
             alert("Failed to place order.");
