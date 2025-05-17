@@ -32,7 +32,9 @@ const AdminMain = () => {
             });
     }, []);
 
-    const [activeTab, setActiveTab] = useState(() => localStorage.getItem('adminActiveTab') || 'users');
+    let initialTab = localStorage.getItem('adminActiveTab');
+    if (!initialTab) initialTab = 'users';
+    const [activeTab, setActiveTab] = useState(initialTab);
 
     useEffect(() => {
         localStorage.setItem('adminActiveTab', activeTab);
@@ -40,47 +42,52 @@ const AdminMain = () => {
 
     // review and listing depend on user.
     const [users, setUsers] = useState([]);
+
     useEffect(() => {
-        axios.get("/users")
-            .then(res => {
-                setUsers(res.data);
-            })
-            .catch(err => console.error(err));
-    }, []);
+        if (activeTab === 'users') {
+            axios.get("/users")
+                .then(res => {
+                    setUsers(res.data);
+                })
+                .catch(err => console.error(err));
+        }
+    }, [activeTab]);
 
     // review depended on user and listing.
     const [listings, setListings] = useState([]);
     const [reviews, setReviews] = useState([]);
     useEffect(() => {
-        axios.get("/phones")
-            .then(res => {
-                setListings(res.data);
-                const allListings = res.data;
-                axios.get("/users")
-                    .then(usersRes => {
-                        setUsers(usersRes.data);
-                        const allReviews = [];
-                        allListings.forEach(listing => {
-                            if (listing.reviews && Array.isArray(listing.reviews)) {
-                                listing.reviews.forEach(review => {
-                                    const reviewerUser = usersRes.data.find(u => u._id === review.reviewer);
-                                    const reviewerName = reviewerUser ? `${reviewerUser.firstname} ${reviewerUser.lastname}` : 'Unknown User';
-                                    allReviews.push({
-                                        reviewer: review.reviewer,
-                                        rating: review.rating,
-                                        comment: review.comment,
-                                        hidden: review.hidden,
-                                        name: reviewerName,
-                                        listing: listing
+        if(activeTab === 'users' || activeTab === 'listings' || activeTab === 'reviews') {
+            axios.get("/phones")
+                .then(res => {
+                    setListings(res.data);
+                    const allListings = res.data;
+                    axios.get("/users")
+                        .then(usersRes => {
+                            setUsers(usersRes.data);
+                            const allReviews = [];
+                            allListings.forEach(listing => {
+                                if (listing.reviews && Array.isArray(listing.reviews)) {
+                                    listing.reviews.forEach(review => {
+                                        const reviewerUser = usersRes.data.find(u => u._id === review.reviewer);
+                                        const reviewerName = reviewerUser ? `${reviewerUser.firstname} ${reviewerUser.lastname}` : 'Unknown User';
+                                        allReviews.push({
+                                            reviewer: review.reviewer,
+                                            rating: review.rating,
+                                            comment: review.comment,
+                                            hidden: review.hidden,
+                                            name: reviewerName,
+                                            listing: listing
+                                        });
                                     });
-                                });
-                            }
+                                }
+                            });
+                            setReviews(allReviews);
                         });
-                        setReviews(allReviews);
-                    });
-            })
-            .catch(err => console.error(err));
-    }, []);
+                })
+                .catch(err => console.error(err));
+        }
+    }, [activeTab]);
 
     const [sales, setSales] = useState([]);
     //fetch latest order every 10 seconds
