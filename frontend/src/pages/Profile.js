@@ -583,7 +583,7 @@ const ProfilePage = () => {
             <div className="profile-container max-w-lg mx-auto mt-20 p-8 bg-white rounded-xl shadow-lg flex flex-col items-center">
             <button
                 className="self-start mb-6 px-4 py-2 font-semibold text-cyan-500 bg-gray-100 rounded-lg shadow hover:bg-gray-200"
-                onClick={() => navigate(-1)}
+                onClick={() => navigate("/")}
             >
                 &larr; Back
             </button>
@@ -606,7 +606,7 @@ const ProfilePage = () => {
             <div className="flex items-center justify-between">
                 <button
                     className="px-4 py-2 font-semibold text-cyan-500 bg-gray-100 rounded-lg shadow hover:bg-gray-200"
-                    onClick={() =>  navigate(-1)}
+                    onClick={() => navigate("/")}
                 >
                     &larr; Back
                 </button>
