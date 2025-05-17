@@ -17,6 +17,26 @@ exports.createOrder = async (req, res) => {
             return res.status(404).json({ message: 'user not valid' });
         }
 
+
+        const itemSnapshot = [];
+        for (const item of cartItems) {
+            const phone = await Phone.findById(item.phoneId);
+
+            if (!phone) {
+                console.warn(`Phone not found for ID: ${item.phoneId}`);
+                continue; // skip if phone not found
+            }
+
+            itemSnapshot.push({
+                phone: phone._id,
+                quantity: item.quantity,
+                price: item.price,
+                titleSnapshot: phone.title,     // create snapshot
+                brandSnapshot: phone.brand      // create snapshot
+            });
+
+        }
+
         const order = new Order({
             user: userId,
             // keep the snapshot
@@ -25,13 +45,7 @@ exports.createOrder = async (req, res) => {
                 email: user.email
             },
 
-            items: cartItems.map(item => ({
-                phone: item.phoneId,
-                quantity: item.quantity,
-                price: item.price,
-                titleSnapshot: item.title,
-                brandSnapshot: item.brand,
-            })),
+            items: itemSnapshot,
             total,
         });
 
@@ -44,6 +58,7 @@ exports.createOrder = async (req, res) => {
                 console.warn(`Phone not found for ID: ${item.phoneId}`);
                 continue; // skip if phone not found
             }
+
 
             const newStock = Math.max(0, phone.stock - item.quantity);
             phone.stock = newStock;
