@@ -2,6 +2,7 @@ const bcrypt = require("bcryptjs");
 const User = require("../models/User");
 const Phone = require("../models/Phone");
 const AdminLog = require("../models/AdminLog");
+const mongoose = require('mongoose');
 
 const admin = {
     email: "admin@gmail.com",
@@ -71,6 +72,9 @@ async function adminDeleteUser(req, res) {
                 .status(404)
                 .json({ message: "User not found in database" });
         }
+
+        await Phone.deleteMany({ seller: new mongoose.Types.ObjectId(userID) }); // delete its listing
+
         await User.findByIdAndDelete(userID);
 
         console.log("Deleted user: ", user);
