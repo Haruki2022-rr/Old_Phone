@@ -137,6 +137,8 @@ const AdminSales = ({sales}) => {
 
         alert(`Sales data export completed as ${format}.`);
     };
+
+
     return (
         <section>
             <h2 className="text-2xl font-semibold mb-4 text-gray-700">Sales and Activity Logs</h2>
@@ -192,10 +194,10 @@ const AdminSales = ({sales}) => {
                                 {formatDate(sale.createdAt)}
                             </td>
                             <td className="px-6 py-4 text-sm text-gray-500 break-words whitespace-pre-wrap w-1/4">
-                                {sale.user ? `${sale.user.firstname} ${sale.user.lastname}` : 'N/A'}
+                                {sale.user ? `${sale.user.firstname} ${sale.user.lastname}` : `${sale.userSnapshot.name}`}
                             </td>
                             <td className="px-6 py-4 text-sm text-gray-500 break-words whitespace-pre-wrap w-2/4">
-                                {sale.items.map(item => `${item.phone?.title || 'Unknown'} (Qty: ${item.quantity})`).join(', ')}
+                                {sale.items.map(item => `${item.titleSnapshot} (Qty: ${item.quantity})`).join(', ')}
                             </td>
                         </tr>
                     ))}
@@ -234,7 +236,7 @@ const AdminSales = ({sales}) => {
                     {sales.slice(0, 3).map(sale => (
                         <li key={sale._id}>
                             Order #{sale._id.slice(-4)} placed by{' '}
-                            {sale.user ? `${sale.user.firstname} ${sale.user.lastname}` : 'Unknown'} for{' '}
+                            {sale.user ? `${sale.user.firstname} ${sale.user.lastname}` : `${sale.userSnapshot.name}`} for{' '}
                             {sale.items.map(item => item.phone?.title || 'an item').join(', ')} on{' '}
                             {new Date(sale.createdAt).toLocaleString()}.
                         </li>
