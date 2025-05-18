@@ -34,7 +34,6 @@ const MainPage = () => {
             })
             .catch(err => {
                 //console.error(err);
-                console.log('clear cart');
                 clearCart()});
     }, []);
 
