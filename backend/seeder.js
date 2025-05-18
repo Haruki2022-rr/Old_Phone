@@ -6,6 +6,7 @@ const bcrypt = require('bcryptjs');
 
 const User  = require('./models/User');
 const Phone = require('./models/Phone');
+const Order = require('./models/Order');
 
 async function seed() {
     // MongoDB Connection
@@ -66,6 +67,8 @@ async function seed() {
         };
     });
     await Phone.insertMany(phones);
+
+    await Order.deleteMany({});
 
     await mongoose.disconnect()
     console.log('Data has been successfully imported')
