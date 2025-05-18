@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import './tailwind.css';
 
@@ -19,6 +20,37 @@ const AdminMain = () => {
         setMessage({ text, type });
         setTimeout(() => setMessage({ text: '', type: '' }), 4000);
     };
+
+    const AutoLogout = ({ logoutAfter = 60 * 1000 }) => { // 1 minute
+        const navigate = useNavigate();
+        const timer = useRef();
+
+        const resetTimer = () => {
+            clearTimeout(timer.current);
+            timer.current = setTimeout(() => {
+            navigate("/adminAuth");
+            }, logoutAfter);
+        };
+
+        useEffect(() => {
+            const events = ['mousemove', 'keydown', 'scroll', 'click'];
+            events.forEach(event => window.addEventListener(event, resetTimer));
+            resetTimer(); // Start timer
+
+            return () => {
+            events.forEach(event => window.removeEventListener(event, resetTimer));
+            clearTimeout(timer.current);
+            };
+        });
+
+        return null;
+    };
+
+
+
+
+
+    
 
 
     useEffect(() => {
@@ -158,6 +190,7 @@ const AdminMain = () => {
         <div className="min-h-screen bg-gray-100 p-4">
             <header className="mb-6">
                 <h1 className="text-4xl font-bold text-gray-800 text-center">Admin Dashboard</h1>
+                <AutoLogout logoutAfter={60 * 1000} />
             </header>
 
             {message.text && (

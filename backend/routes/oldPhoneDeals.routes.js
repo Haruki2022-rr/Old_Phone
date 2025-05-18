@@ -80,8 +80,6 @@ router.get('/admin/me', requireAuth, (req, res) => {
 
 
 
-
-
 // get all users: /api/oldPhoneDeals/users
 router.get('/users', async (req, res) => {
     const users = await User.find();

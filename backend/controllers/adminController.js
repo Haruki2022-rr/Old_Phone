@@ -220,6 +220,7 @@ async function adminDeleteListing(req, res) {
 
 }
 
+
 async function adminAuthentication(req, res) {
     try {
         const { email, password } = req.body;
