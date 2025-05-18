@@ -1,145 +1,250 @@
+// src/pages/PhoneDetail.js
 import React, { useEffect, useState, useContext } from 'react';
-import { useParams, useNavigate,useLocation } from 'react-router-dom';
-import { CartContext } from '../context/CartContext';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
+import { CartContext } from '../context/CartContext';
 
-const PhoneDetail = () => {
-    const { id } = useParams();
-    const navigate = useNavigate();
-    const [phone, setPhone] = useState(null);
-    const [visibleReviews, setVisibleReviews] = useState(3);
-    const [quantity, setQuantity] = useState(1);
-    const [showQuantityInput, setShowQuantityInput] = useState(false);
-    const [user, setUser] = useState(null);
-    const { cartItems, addToCart } = useContext(CartContext);
-    const loc = useLocation();
+axios.defaults.baseURL = 'http://localhost:5050/api/oldPhoneDeals';
+axios.defaults.withCredentials = true;   // send cookies on every call
 
-    useEffect(() => {
-        fetch(`http://localhost:5050/api/oldPhoneDeals/phones/${id}`)
-            .then(res => res.json())
-            .then(data => setPhone(data))
-            .catch(err => console.error('Failed to fetch phone details:', err));
-    }, [id]);
+export default function PhoneDetail() {
+  const { id }       = useParams();
+  const nav          = useNavigate();
+  const loc          = useLocation();
+  const { cartItems, addToCart } = useContext(CartContext);
 
-    useEffect(() => {
-        axios.get("http://localhost:5050/api/oldPhoneDeals/auth/currentUser", { withCredentials: true })
-            .then(res => setUser(res.data.user))
-            .catch(() => setUser(null));
-    }, []);
+  /* ------------------------------------------------------------------ */
+  /* state                                                               */
+  /* ------------------------------------------------------------------ */
+  const [phone,   setPhone]   = useState(null);
+  const [user,    setUser]    = useState(null);
 
-    if (!phone) return <div>Loading...</div>;
+  // reviews UI helpers
+  //const [showCount,       setShowCount]   = useState(3);
+  const [expandedIds,     setExpandedIds] = useState(new Set());
 
-    const reviewsToShow = phone.reviews?.slice(0, visibleReviews) || [];
-    const existingItem = cartItems.find(item => item.phoneId === phone._id);
-    const currentCartQty = existingItem ? existingItem.quantity : 0;
-    const remainingStock = phone.stock - currentCartQty;
+  // add-to-cart helpers
+  const [qty,             setQty]         = useState(1);
+  const [askQty,          setAskQty]      = useState(false);
 
-    const handleAddToCartClick = () => {
-        if (!user) {
-            alert("You must be logged in to add items to cart.");
-            navigate("/auth", { state: { from: loc } });
-            return;
-        }
-        setShowQuantityInput(true);
-    };
+  // form for new review
+  const [newComment,      setNewComment]  = useState('');
+  const [newRating,       setNewRating]   = useState(5);
 
-    const handleConfirmAdd = () => {
-        if (quantity > remainingStock) {
-            alert(`Only ${remainingStock} left in stock.`);
-            return;
-        }
-        addToCart(phone, quantity, phone.price);
-        setShowQuantityInput(false);
-    };
+  /* ------------------------------------------------------------------ */
+  /* fetches                                                             */
+  /* ------------------------------------------------------------------ */
+  const loadPhone = async () => {
+    const { data } = await axios.get(`/phones/${id}`);
+    setPhone(data);
+  };
 
-    return (
-        <div className="max-w-3xl mx-auto p-6 bg-white shadow rounded">
-            <button
-                className="px-4 py-2 font-semibold text-cyan-500 bg-gray-100 rounded-lg shadow hover:bg-gray-200 mb-6"
-                onClick={() => navigate(-1)}
-            >
-                &larr; Back
+  useEffect(() => { loadPhone(); }, [id]);
+
+  useEffect(() => {
+    axios.get('/auth/currentUser')
+         .then(res => setUser(res.data.user))
+         .catch(()  => setUser(null));
+  }, []);
+
+  if (!phone) return <p className="p-10 text-center">Loading…</p>;
+
+  /* ------------------------------------------------------------------ */
+  /* derived values & helpers                                            */
+  /* ------------------------------------------------------------------ */
+  const isSeller = user && String(user._id) === String(phone.seller?._id);
+  const cartLine = cartItems.find(i => i.phoneId === phone._id);
+  const cartQty  = cartLine ? cartLine.quantity : 0;
+  const stockLeft = phone.stock - cartQty;
+
+  const maySee = rev =>
+       !rev.hidden
+    || (user && (String(rev.reviewer) === String(user._id) || isSeller));
+
+  const visibleReviews = (phone.reviews || []).filter(maySee);
+  const pagedReviews   = visibleReviews;
+
+  const isExpanded = id => expandedIds.has(id);
+
+  const toggleExpand = id =>
+    setExpandedIds(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+
+  /* ------------------------------------------------------------------ */
+  /* review actions                                                      */
+  /* ------------------------------------------------------------------ */
+  const submitReview = async () => {
+    if (!newComment.trim()) return alert('Comment cannot be empty');
+
+    try {
+      const { data } = await axios.post(
+        `/phones/${id}/reviews`,
+        { rating: newRating, comment: newComment }
+      );
+      setPhone(p => ({ ...p, reviews: [...p.reviews, data.review] }));
+      setNewComment(''); setNewRating(5);
+    } catch (err) {
+        
+      alert(err.response?.data?.error || 'Failed to add review');
+    }
+  };
+
+  const toggleHidden = async (reviewId) => {
+    try {
+      const { data } = await axios.post(
+        `/phones/${phone._id}/reviews/${reviewId}/toggle` 
+      );
+      // reload or update locally
+      setPhone(p => ({
+        ...p,
+        reviews: p.reviews.map(r =>
+          String(r._id) === reviewId ? { ...r, hidden: data.hidden } : r
+        )
+      }));
+    } catch (err) {
+      alert(err.response?.data?.error || 'Failed');
+    }
+  };
+
+
+  /* ------------------------------------------------------------------ */
+  /* cart actions                                                        */
+  /* ------------------------------------------------------------------ */
+  const startAdd = () => {
+    if (!user) return nav('/auth', { state:{ from: loc }});
+    setAskQty(true);
+  };
+
+  const confirmAdd = () => {
+    if (qty > stockLeft) return alert(`Only ${stockLeft} left`);
+    addToCart(phone, qty, phone.price);
+    setAskQty(false);
+  };
+
+  /* ------------------------------------------------------------------ */
+  /* render                                                              */
+  /* ------------------------------------------------------------------ */
+  return (
+    <div className="max-w-3xl mx-auto p-6 bg-white shadow rounded">
+
+      {/* -- header + back -- */}
+      <button onClick={()=>nav(-1)}
+              className="mb-6 px-4 py-2 bg-gray-100 rounded hover:bg-gray-200">
+        ← Back
+      </button>
+
+      {/* -- basic info -- */}
+      <img src={`http://localhost:5050${phone.image}`}
+           alt={phone.title}
+           className="mx-auto mb-4 max-h-64" />
+      <h2 className="text-2xl font-bold mb-2">{phone.title}</h2>
+      <p className="text-gray-600">Brand: {phone.brand}</p>
+      <p className="text-gray-600">Price: ${phone.price}</p>
+      <p className="text-gray-600">
+        Stock: {stockLeft > 0 ? stockLeft : 'Out of stock'}
+      </p>
+      <p className="text-gray-600 mb-6">
+        Seller: {phone.seller?.firstname} {phone.seller?.lastname}
+      </p>
+
+      {/* -- cart section -- */}
+      {stockLeft > 0 ? (
+        askQty ? (
+          <div className="flex items-center gap-3 mb-6">
+            <input type="number" min="1" max={stockLeft}
+                   value={qty} onChange={e=>setQty(+e.target.value)}
+                   className="border p-2 w-24 rounded" />
+            <button onClick={confirmAdd}
+                    className="bg-green-500 text-white px-4 py-2 rounded">
+              Add
             </button>
-            <img
-                src={`http://localhost:5050${phone.image}`}
-                alt={phone.title}
-                className="mx-auto mb-4 max-h-64"
-            />
-            <h2 className="text-2xl font-bold mb-2">{phone.title}</h2>
-            <p className="text-gray-600 mb-1">Brand: {phone.brand}</p>
-            <p className="text-gray-600 mb-1">Price: ${phone.price}</p>
-            <p className="text-gray-600 mb-1">Stock: {remainingStock > 0 ? remainingStock : 'Out of stock'}</p>
-            <p className="text-gray-600 mb-1">Seller: {phone.seller?.firstname} {phone.seller?.lastname}</p>
+            <button onClick={()=>setAskQty(false)}
+                    className="underline text-sm">Cancel</button>
+          </div>
+        ) : (
+          <button onClick={startAdd}
+                  className="bg-cyan-500 text-white px-4 py-2 rounded mb-6">
+            Add to Cart
+          </button>
+        )
+      ) : (
+        <p className="text-red-500 font-semibold mb-6">Out of stock</p>
+      )}
 
-            <div className="mt-6">
-                {currentCartQty > 0 && (
-                    <p className="text-sm text-yellow-600 mb-1">
-                        In cart: {currentCartQty}
-                    </p>
-                )}
-                {remainingStock <= 0 ? (
-                    <p className="text-sm text-red-500 font-semibold mb-2">
-                        Out of stock
-                    </p>
-                ) : showQuantityInput ? (
-                    <div className="flex items-center gap-3">
-                        <input
-                            type="number"
-                            min="1"
-                            max={remainingStock}
-                            value={quantity}
-                            onChange={(e) => setQuantity(Number(e.target.value))}
-                            className="border p-2 w-20 rounded"
-                        />
-                        <button
-                            onClick={handleConfirmAdd}
-                            className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-                        >
-                            Confirm
-                        </button>
-                        <button
-                            onClick={() => setShowQuantityInput(false)}
-                            className="text-red-500 underline text-sm"
-                        >
-                            Cancel
-                        </button>
-                    </div>
-                ) : (
-                    <button
-                        onClick={handleAddToCartClick}
-                        className="bg-cyan-500 text-white px-4 py-2 rounded hover:bg-cyan-600"
-                    >
-                        Add to Cart
-                    </button>
-                )}
-            </div>
+      {/* -- reviews -- */}
+      <h3 className="text-xl font-semibold mb-3">Reviews</h3>
 
-            <h3 className="text-xl font-semibold mt-8 mb-2">Reviews</h3>
-            <div className="space-y-4">
-                {reviewsToShow.map((review, index) => (
-                    <div
-                        key={index}
-                        className={`p-3 rounded border ${review.hidden ? 'text-gray-400' : 'text-black'}`}
-                    >
-                        <p className="font-medium">Rating: {review.rating}/5</p>
-                        <p>
-                            {review.comment.length > 200
-                                ? review.comment.slice(0, 200) + '...'
-                                : review.comment}
-                        </p>
-                    </div>
-                ))}
-                {phone.reviews?.length > visibleReviews && (
+      {pagedReviews.map(r => {
+        const owned = user && ( String(r.reviewer) === String(user._id) );
+        const canToggle = owned || isSeller;
+
+        const long   = r.comment.length > 200;
+        const cut    = r.comment.slice(0,200);
+        const showAll = isExpanded(r._id);
+
+        return (
+          <div key={r._id}
+               className={`border p-3 mb-4 rounded
+                          ${r.hidden ? 'text-gray-400' : 'text-black'}`}>
+            <p className="font-medium">Rating: {r.rating}/5</p>
+            <p className="whitespace-pre-wrap">
+              { long ? (showAll ? r.comment : cut + '…') : r.comment }
+            </p>
+                {long && (
                     <button
-                        onClick={() => setVisibleReviews(prev => prev + 3)}
-                        className="bg-blue-500 text-white px-3 py-1 rounded"
+                        onClick={() => toggleExpand(r._id)}
+                        className="text-sm text-blue-600 underline mt-1"
                     >
-                        Show More
+                        {showAll ? 'Show less' : 'Show more'}
                     </button>
+                    )}
+    
+
+            {user && (user._id === r.reviewer || user._id === phone.seller?._id) && (
+                 <button
+                    onClick={() => toggleHidden(r._id)}
+                    className="text-sm text-red-500 underline ml-2"
+                  >
+                    {r.hidden ? 'Unhide' : 'Hide'}
+                  </button>
                 )}
-            </div>
+          </div>
+        );
+      })}
+
+      {visibleReviews.length === 0 && (
+        <p className="mb-6">No reviews yet.</p>
+      )}
+
+      
+      {/* --------- add review form --------- */}
+      {user && (
+        <div className="mt-10">
+          <h3 className="text-lg font-semibold mb-2">Add a review</h3>
+          <textarea
+            rows="3"
+            value={newComment}
+            onChange={e=>setNewComment(e.target.value)}
+            placeholder="Write your comment here…"
+            className="w-full p-2 border rounded mb-2"
+          />
+          <div className="flex items-center gap-3 mb-4">
+            <label>Rating:</label>
+            <select value={newRating}
+                    onChange={e=>setNewRating(+e.target.value)}
+                    className="border p-2 rounded">
+              {[1,2,3,4,5].map(n=> <option key={n}>{n}</option>)}
+            </select>
+          </div>
+          <button onClick={submitReview}
+                  className="bg-green-500 text-white px-4 py-2 rounded">
+            Submit review
+          </button>
         </div>
-    );
-};
-
-export default PhoneDetail;
+      )}
+    </div>
+  );
+}
