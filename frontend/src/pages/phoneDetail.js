@@ -12,28 +12,17 @@ export default function PhoneDetail() {
   const nav          = useNavigate();
   const loc          = useLocation();
   const { cartItems, addToCart } = useContext(CartContext);
-
-  /* ------------------------------------------------------------------ */
-  /* state                                                               */
-  /* ------------------------------------------------------------------ */
+  const [visibleReviews, setVisibleReviews] = useState(3);
   const [phone,   setPhone]   = useState(null);
   const [user,    setUser]    = useState(null);
-
-  // reviews UI helpers
-  //const [showCount,       setShowCount]   = useState(3);
   const [expandedIds,     setExpandedIds] = useState(new Set());
-
-  // add-to-cart helpers
   const [qty,             setQty]         = useState(1);
   const [askQty,          setAskQty]      = useState(false);
-
-  // form for new review
   const [newComment,      setNewComment]  = useState('');
   const [newRating,       setNewRating]   = useState(5);
 
-  /* ------------------------------------------------------------------ */
-  /* fetches                                                             */
-  /* ------------------------------------------------------------------ */
+  /* fetches  */
+  
   const loadPhone = async () => {
     const { data } = await axios.get(`/phones/${id}`);
     setPhone(data);
@@ -49,9 +38,10 @@ export default function PhoneDetail() {
 
   if (!phone) return <p className="p-10 text-center">Loading…</p>;
 
-  /* ------------------------------------------------------------------ */
-  /* derived values & helpers                                            */
-  /* ------------------------------------------------------------------ */
+  
+  /* derived values & helpers */
+ 
+  const reviewsToShow = phone.reviews?.slice(0, visibleReviews) || [];
   const isSeller = user && String(user._id) === String(phone.seller?._id);
   const cartLine = cartItems.find(i => i.phoneId === phone._id);
   const cartQty  = cartLine ? cartLine.quantity : 0;
@@ -61,8 +51,8 @@ export default function PhoneDetail() {
        !rev.hidden
     || (user && (String(rev.reviewer) === String(user._id) || isSeller));
 
-  const visibleReviews = (phone.reviews || []).filter(maySee);
-  const pagedReviews   = visibleReviews;
+  const filteredReviews = (phone.reviews || []).filter(maySee);
+  const pagedReviews   = filteredReviews.slice(0, visibleReviews);
 
   const isExpanded = id => expandedIds.has(id);
 
@@ -73,9 +63,9 @@ export default function PhoneDetail() {
       return next;
     });
 
-  /* ------------------------------------------------------------------ */
-  /* review actions                                                      */
-  /* ------------------------------------------------------------------ */
+  
+  /* review actions */
+  
   const submitReview = async () => {
     if (!newComment.trim()) return alert('Comment cannot be empty');
 
@@ -109,10 +99,7 @@ export default function PhoneDetail() {
     }
   };
 
-
-  /* ------------------------------------------------------------------ */
-  /* cart actions                                                        */
-  /* ------------------------------------------------------------------ */
+  /* cart actions */
   const startAdd = () => {
     if (!user) return nav('/auth', { state:{ from: loc }});
     setAskQty(true);
@@ -124,9 +111,8 @@ export default function PhoneDetail() {
     setAskQty(false);
   };
 
-  /* ------------------------------------------------------------------ */
-  /* render                                                              */
-  /* ------------------------------------------------------------------ */
+  
+  /* render  */
   return (
     <div className="max-w-3xl mx-auto p-6 bg-white shadow rounded">
 
@@ -150,7 +136,7 @@ export default function PhoneDetail() {
         Seller: {phone.seller?.firstname} {phone.seller?.lastname}
       </p>
 
-      {/* -- cart section -- */}
+      {/*  cart section */}
       {stockLeft > 0 ? (
         askQty ? (
           <div className="flex items-center gap-3 mb-6">
@@ -214,13 +200,21 @@ export default function PhoneDetail() {
           </div>
         );
       })}
+      {filteredReviews.length > visibleReviews && (
+        <button
+            onClick={() => setVisibleReviews(prev => prev + 3)}
+            className="bg-blue-500 text-white px-3 py-1 rounded"
+        >
+            Show More
+        </button>
+      )}
 
-      {visibleReviews.length === 0 && (
+      {filteredReviews.length === 0 && (
         <p className="mb-6">No reviews yet.</p>
       )}
 
       
-      {/* --------- add review form --------- */}
+      {/*add review form  */}
       {user && (
         <div className="mt-10">
           <h3 className="text-lg font-semibold mb-2">Add a review</h3>
