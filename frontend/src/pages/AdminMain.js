@@ -72,6 +72,7 @@ const AdminMain = () => {
                                         const reviewerUser = usersRes.data.find(u => u._id === review.reviewer);
                                         const reviewerName = reviewerUser ? `${reviewerUser.firstname} ${reviewerUser.lastname}` : 'Unknown User';
                                         allReviews.push({
+                                            _id: review._id,
                                             reviewer: review.reviewer,
                                             rating: review.rating,
                                             comment: review.comment,

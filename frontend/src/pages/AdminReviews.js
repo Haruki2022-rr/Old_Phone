@@ -77,7 +77,7 @@ const AdminReviews = ({ reviews, setReviews, showMessage }) => {
                     if (response.status === 200) {
                         setReviews(reviews.map(r => r === review ? { ...r, hidden: !r.hidden } : r));
                         showMessage(`Review by ${review.name} visibility toggled.`, 'success');
-                        console.log(response.data.listing)
+                        
                     } else {
                         alert(response.data.message || "Failed to update listing status.");
                     }

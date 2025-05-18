@@ -113,8 +113,9 @@ async function adminEditListing(req, res) {
         }
 
         if (listingReview) {
+            console.log("Listing review: ", listingReview);
             listing.reviews.forEach((review) => {
-                if (review.reviewer.toString() === listingReview.reviewer.toString()) {
+                if (review._id.toString() === listingReview._id.toString()) {
                     review.hidden = !review.hidden;
                 }
             })
