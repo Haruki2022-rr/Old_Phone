@@ -91,11 +91,13 @@ const AdminMain = () => {
     }, [activeTab]);
 
     const [sales, setSales] = useState([]);
+
     //fetch latest order every 10 seconds
     useEffect(() => {
         const fetchOrders = () => {
-            axios.get("/orders")
+            axios.get("/orders?ping=true", { withCredentials: true })// ping = true will not extend maxage
                 .then(res => {
+                    console.log('query orders');
                     const sortedOrders = res.data.sort(
                         (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
                     );
@@ -109,6 +111,20 @@ const AdminMain = () => {
 
         return () => clearInterval(interval); //
     }, []);
+
+    useEffect(() => {
+        if (activeTab === 'sales') {
+            axios.get("/orders", { withCredentials: true }) //without ping=true, user operation
+                .then(res => {
+                    const sortedOrders = res.data.sort(
+                        (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+                    );
+                    setSales(sortedOrders); // 或 setOrders
+                    console.log("Orders tab clicked, session extended.");
+                })
+                .catch(err => console.error("Failed to fetch orders:", err));
+        }
+    }, [activeTab]);
 
     const [adminLogs, setAdminLogs] = useState([]);
 

@@ -37,6 +37,14 @@ app.use(
   })
 );
 
+//avoid get orders update max age
+app.use((req, res, next) => {
+    if (req.query.ping === 'true') {
+        delete req.session;
+    }
+    next();
+});
+
 // to check if user has logged in -> can be used in routes
 module.exports = function requireAuth(req, res, next) {
   if (req.session && req.session.userId) return next();

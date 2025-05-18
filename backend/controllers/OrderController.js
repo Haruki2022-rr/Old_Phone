@@ -75,6 +75,17 @@ exports.createOrder = async (req, res) => {
 // GET all orders (admin)
 exports.getAllOrders = async (req, res) => {
     try {
+
+        const isPing = req.query.ping === 'true';
+
+        if(!isPing)
+        {
+            if(req.session) {
+                req.session.touch();
+            }
+        }
+
+
         const orders = await Order.find()
             .populate('user', 'firstname lastname email')
             .populate('items.phone', 'title price image');
