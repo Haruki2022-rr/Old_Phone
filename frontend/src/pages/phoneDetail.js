@@ -34,12 +34,15 @@ export default function PhoneDetail() {
   /* ------------------------------------------------------------------ */
   /* fetches                                                             */
   /* ------------------------------------------------------------------ */
-  const loadPhone = async () => {
-    const { data } = await axios.get(`/phones/${id}`);
-    setPhone(data);
-  };
 
-  useEffect(() => { loadPhone(); }, [id]);
+  // fetch phone details
+  useEffect(() => { 
+    const loadPhone = async () => {
+      const { data } = await axios.get(`/phones/${id}`);
+      setPhone(data);
+    }
+    loadPhone();
+  }, [id]);
 
   useEffect(() => {
     axios.get('/auth/currentUser')
@@ -86,6 +89,7 @@ export default function PhoneDetail() {
       );
       setPhone(p => ({ ...p, reviews: [...p.reviews, data.review] }));
       setNewComment(''); setNewRating(5);
+      window.location.reload();
     } catch (err) {
         
       alert(err.response?.data?.error || 'Failed to add review');

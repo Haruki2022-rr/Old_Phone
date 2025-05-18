@@ -161,7 +161,7 @@ const ProfilePage = () => {
     // TODO: Handle hiding comments
     const handleCommentHiding = (comment, commentDetails) => {
         console.log(comment, commentDetails);
-        axios.post("/auth/hideComment", { comment: comment.reviewer, commentDetails: commentDetails })
+        axios.post("/auth/hideComment", { comment: comment._id, commentDetails: commentDetails })
             .then(response => {
                 if (response.status === 200) {
                     alert("Comment updated successfully.");

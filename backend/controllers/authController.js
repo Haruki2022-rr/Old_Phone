@@ -406,7 +406,7 @@ async function hideComment(req, res) {
   if (!user) {
     return res.status(404).json({ message: "User not found" });
   }
-  
+  console.log("commentDetails: ", commentDetails);
   // Find the phone document by its _id from commentDetails
   const phone = await Phone.findById(commentDetails._id);
   if (!phone) {
@@ -416,7 +416,7 @@ async function hideComment(req, res) {
   // Locate the review with reviewer id matching comment and mark it as hidden
   let reviewFound = false;
   phone.reviews.forEach(review => {
-    if (review.reviewer.toString() === comment) {
+    if (review._id.toString() === comment) {
       review.hidden = !review.hidden; // Toggle the hidden status
       reviewFound = true;
     }
