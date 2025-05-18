@@ -5,10 +5,17 @@ const User = require('../models/User');
 // get top 5 phones with lowest stock (that are visible and not empty)
 exports.getSoldOutSoonPhones = async (req, res) => {
     try {
-        const phones = await Phone.find({ stock: {$gt:0 }, disabled:  false })
+        const validSellers = await User.find({}, '_id').lean();
+        const validSellerIds = validSellers.map(seller => seller._id.toString());
+        
+        const phones = await Phone.find({ stock: {$gt:0 }, disabled:  false , seller: { $in: validSellerIds }})
+            .populate('seller', 'firstname lastname')
             .sort({ stock: 1})// ascending
-            .limit(5);
-        res.json(phones)
+            .limit(5)
+            .lean();
+        // Further filter to only include phones with valid populated seller data
+        const phonesWithSellers = phones.filter(phone => phone.seller && phone.seller.firstname);
+        res.json(phonesWithSellers);
     } catch(err) {
         res.status(500).json({  error: 'Failed to fetch sold out soon phones' });
     }
@@ -18,9 +25,18 @@ exports.getSoldOutSoonPhones = async (req, res) => {
 // Get top 5 best sellers (phoens with  highest average rating, at least 2 reviews and  visible)
 exports.getBestSellerPhones = async (req, res) => {
 try {
-    const phones = await Phone.find({ disabled: false }).lean();
+    const validSellers = await User.find({}, '_id').lean();
+    const validSellerIds = validSellers.map(seller => seller._id.toString());
+        
+    const phones = await Phone.find({ disabled: false , seller: {$in: validSellerIds}
+    })
+    .populate('seller', 'firstname lastname')
+    .lean();
 
-    const ratedPhones = phones
+    // Further filter to only include phones with valid populated seller data
+    const phonesWithSellers = phones.filter(phone => phone.seller && phone.seller.firstname);
+
+    const ratedPhones = phonesWithSellers
         .map(phone => {
             const validReviews = phone.reviews || [];
             const totalRatings = validReviews.reduce((sum, r) => sum + r.rating, 0);
@@ -41,7 +57,15 @@ try {
 exports.searchPhones = async (req, res) => {
     try {
        const { title, brand, maxPrice, page = 1, sort = 'titleAsc' } = req.query;
-    const query = { disabled: false };
+
+       const validSellers = await User.find({}, '_id').lean();
+       const validSellerIds = validSellers.map(seller => seller._id.toString());
+
+
+
+    const query = { disabled: false, seller: { $in: validSellerIds } };
+
+
     if (title && title.trim() !== '') {
       query.title = { $regex: title.trim(), $options: 'i' };
     }
@@ -57,14 +81,16 @@ exports.searchPhones = async (req, res) => {
     const skip = (Number(page) - 1) * limit;
 
     const [phones, totalCount] = await Promise.all([
-      Phone.find(query).sort(sortOption).skip(skip).limit(limit),
+      Phone.find(query)
+      .populate('seller','firstname lastname')
+      .sort(sortOption).skip(skip).limit(limit),
       Phone.countDocuments(query),
     ]);
-
+    const phonesWithSellers = phones.filter(phone => phone.seller && phone.seller.firstname);
     const totalPages = Math.ceil(totalCount / limit);
-    return res.json({ phones, totalPages });
+    return res.json({phones: phonesWithSellers, totalPages });
     } catch (err) {
-        console.error('Error seraching phoenes:', err);
+        console.error('Error seraching phones:', err);
         res.status(500).json({error: 'Search failed'});
     }
 };
@@ -76,6 +102,9 @@ exports.getPhoneDetails = async (req, res) => {
         .lean();
         if (!phone) {
             return res.status(404).json({error: 'Phone not found'});
+        }
+         if (!phone.seller || !phone.seller.firstname) {
+            return res.status(404).json({error: 'Phone has no valid seller information'});
         }
         res.json(phone);
     } catch(err) {

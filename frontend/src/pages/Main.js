@@ -11,11 +11,16 @@ const MainPage = () => {
   const [bestSellers, setBestSellers] = useState([]);
   const [searchResults, setSearchResults] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [inputQuery, setInputQuery] = useState('');
+  const [inputSort, setInputSort] = useState('titleAsc');
+  const [inputBrand, setInputBrand] = useState('');
+  const [inputMaxPrice, setInputMaxPrice] = useState('');
   const [brand, setBrand] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
   const [page, setPage] = useState(0);
   const [sort, setSort] = useState('titleAsc');
   const [totalPages, setTotalPages] = useState(1);
+  const [hasSearched, setHasSearched] = useState(false);
 
   const [user, setUser] = useState(null);
   const { clearCart } = useContext(CartContext);
@@ -63,11 +68,12 @@ const MainPage = () => {
       .catch(err => console.error(err));
   }, []);
 
-  const handleSearch = () => {
+  const handleSearch = (query, brandFilter, maxPriceFilter,sortOrder, pageNum) => {
+    setHasSearched(true);
 
-    let url = `http://localhost:5050/api/oldPhoneDeals/phones/search?title=${searchQuery}&page=${page}&sort=${sort}`;
-    if (brand) url += `&brand=${brand}`;
-    if (maxPrice) url += `&maxPrice=${maxPrice}`;
+    let url = `http://localhost:5050/api/oldPhoneDeals/phones/search?title=${query}&page=${pageNum}&sort=${sortOrder}`;
+    if (brandFilter) url += `&brand=${brandFilter}`;
+    if (maxPriceFilter) url += `&maxPrice=${maxPriceFilter}`;
     console.log('Search URL:', url);
     fetch(url)
       .then(res => res.json())
@@ -86,13 +92,8 @@ const MainPage = () => {
         setTotalPages(1);
       });
   };
+//(searchQuery || brand || maxPrice || page )
 
-  useEffect(() => {
-    if (searchQuery || brand || maxPrice || page ) {
-      handleSearch();
-    }
-    // eslint-disable-next-line
-  }, [page]);
 
     const handleSignOut = () => {
         axios.post("/auth/logout")
@@ -148,12 +149,12 @@ const MainPage = () => {
           <input
             type="text"
             placeholder="Search phones..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            value={inputQuery}
+            onChange={(e) => setInputQuery(e.target.value)}
             className="border p-2 w-full md:w-1/2 rounded"
           />
           <div className="flex gap-4 items-center">
-            <select value={brand} onChange={(e) => setBrand(e.target.value)} className="border p-2 rounded">
+            <select value={inputBrand} onChange={(e) => setInputBrand(e.target.value)} className="border p-2 rounded">
           <option value="">All Brands</option>
           {allBrands && Array.isArray(allBrands) && allBrands.map((b) => (
             <option key={b} value={b}>
@@ -163,14 +164,14 @@ const MainPage = () => {
             </select>
 
             <div className="flex flex-col items-center">
-          <span className="text-sm mb-1 h-5">${maxPrice || 'Max'}</span>
+          <span className="text-sm mb-1 h-5">${inputMaxPrice || 'Max'}</span>
           <input
             type="range"
             min="0"
             max="500"
             step="1"
-            value={maxPrice}
-            onChange={(e) => setMaxPrice(e.target.value)}
+            value={inputMaxPrice}
+            onChange={(e) => setInputMaxPrice(e.target.value)}
             className="w-40"
           />
           <div className="flex justify-between w-full text-xs text-gray-400">
@@ -180,9 +181,9 @@ const MainPage = () => {
             </div>
             <div>
           <select
-            value={sort}
+            value={inputSort}
             onChange={(e) => {
-                setSort(e.target.value);
+                setInputSort(e.target.value);
                 setPage(1);
                 }}
                 className="border p-2 rounded"
@@ -194,10 +195,19 @@ const MainPage = () => {
               <div>
               <button
                 onClick={() => {
-                  if (page === 1) {
-                    handleSearch();
-                  }
+                  const newSort = inputSort;
+                  const newQuery = inputQuery;
+                  const newBrand = inputBrand;
+                  const newMaxPrice = inputMaxPrice;
+
+                  // Update state
+                  setSort(newSort);
+                  setSearchQuery(newQuery);
+                  setBrand(newBrand);
+                  setMaxPrice(newMaxPrice);
                   setPage(1);
+                  setHasSearched(true);
+                  handleSearch(newQuery, newBrand, newMaxPrice, newSort, 1);
                 }}
                 className="bg-cyan-500 text-white px-6 py-2 rounded hover:bg-cyan-600"
               >
@@ -208,7 +218,7 @@ const MainPage = () => {
             </div>
 
             {/* Search Results */}
-        {searchResults.length > 0 && (
+        {hasSearched && searchResults.length > 0 && (
           <>
             <h2 className="text-xl font-bold mb-4">Search Results</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -254,32 +264,14 @@ const MainPage = () => {
           </>
         )}
         
-        {searchQuery && searchResults.length === 0 && (
+        
+        {hasSearched &&searchQuery && searchResults.length === 0 && (
           <>
-            {/*<p className="text-center text-lg">No results found</p>*/}
-          {/* Sold Out Soon */}
-          <div>
-            <h2 className="text-xl font-bold mb-4">Sold Out Soon</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {soldOutSoon.map((phone) => (
-                <PhoneCard key={phone._id} phone={phone} />
-              ))}
-            </div>
-          </div>
-
-          {/* Best Sellers */}
-          <div>
-            <h2 className="text-xl font-bold mb-4">Best Sellers</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {bestSellers.map((phone) => (
-                <PhoneCard key={phone._id} phone={phone} />
-              ))}
-            </div>
-          </div>
-        </>
+            <p className="text-center text-lg">No results found</p>
+          </>
       )}
-
-      {!searchQuery && searchResults.length === 0 && (
+      {/* && !searchQuery && searchResults.length === 0 */}
+      {!hasSearched  && (
         <>
           {/* Sold Out Soon */}
           <div>
