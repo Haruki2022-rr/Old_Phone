@@ -10,15 +10,12 @@ const MainPage = () => {
   const [allBrands, setAllBrands] = useState(new Set());
   const [bestSellers, setBestSellers] = useState([]);
   const [searchResults, setSearchResults] = useState([]);
-  const [searchQuery, setSearchQuery] = useState('');
   const [inputQuery, setInputQuery] = useState('');
   const [inputSort, setInputSort] = useState('titleAsc');
   const [inputBrand, setInputBrand] = useState('');
-  const [inputMaxPrice, setInputMaxPrice] = useState(500);
-  const [brand, setBrand] = useState('');
-  const [maxPrice, setMaxPrice] = useState(500);
+  const [inputMaxPrice, setInputMaxPrice] = useState('');
+  const [maxPrice, setMaxPrice] = useState('');
   const [page, setPage] = useState(0);
-  const [sort, setSort] = useState('titleAsc');
   const [totalPages, setTotalPages] = useState(1);
   const [hasSearched, setHasSearched] = useState(false);
 
@@ -62,6 +59,17 @@ const MainPage = () => {
         });
         const brandsArray = Array.from(brandsSet);
         setAllBrands(brandsArray);
+
+
+        let highestPrice = 0;
+        phones.forEach(phone => {
+        if (phone.price && phone.price > highestPrice) {
+          highestPrice = phone.price;
+        }
+      });
+      const maxPriceRounded = Math.ceil(highestPrice);
+      setInputMaxPrice(maxPriceRounded);
+      setMaxPrice(maxPriceRounded);
 
       })
       .catch(err => console.error(err));
@@ -167,7 +175,7 @@ const MainPage = () => {
           <input
             type="range"
             min="0"
-            max="500"
+            max={maxPrice}
             step="1"
             value={inputMaxPrice}
             onChange={(e) => setInputMaxPrice(e.target.value)}
@@ -175,7 +183,7 @@ const MainPage = () => {
           />
           <div className="flex justify-between w-full text-xs text-gray-400">
             <span>$0</span>
-            <span>$500</span>
+            <span>${maxPrice}</span>
           </div>
             </div>
             <div>
@@ -200,10 +208,7 @@ const MainPage = () => {
                   const newMaxPrice = inputMaxPrice;
 
                   // Update state
-                  setSort(newSort);
-                  setSearchQuery(newQuery);
-                  setBrand(newBrand);
-                  setMaxPrice(newMaxPrice);
+              
                   setPage(1);
                   setHasSearched(true);
                   handleSearch(newQuery, newBrand, newMaxPrice, newSort, 1);
@@ -264,7 +269,7 @@ const MainPage = () => {
         )}
         
         
-        {hasSearched &&searchQuery && searchResults.length === 0 && (
+        {hasSearched &&inputQuery && searchResults.length === 0 && (
           <>
             <p className="text-center text-lg">No results found</p>
           </>
