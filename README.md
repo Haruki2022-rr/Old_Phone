@@ -11,6 +11,7 @@ These instructions will get you a copy of the project up and running on your loc
 - Node.js
 - npm (comes with Node.js)
 - MongoDB (local)
+- MailSend API
 
 Optional tools:
 - Vscode (or preferred IDE)
@@ -24,6 +25,16 @@ Optional tools:
 cd /backend
 npm install 
 ```
+create a .env file under the /backend directory with follow content.
+
+```env
+PORT=5050
+MONGO_URI=mongodb://localhost:27017/oldphonedb
+process.env.SENDER_NAME=COMP5347_A2
+SENDER_EMAIL=MS_HVkK51@test-eqvygm0n69dl0p7w.mlsender.net
+MAILERSEND_API_KEY=mlsn.4e708a6d86d5835ac3f0dd044ab249e39a2fb053fb715f029e6233779caab0f3
+```
+SENDER_EMAIL and MAILERSEND_API_KEY replaced with your own.
 
 2. Setup the frontend
 ```bash
