@@ -14,9 +14,9 @@ const MainPage = () => {
   const [inputQuery, setInputQuery] = useState('');
   const [inputSort, setInputSort] = useState('titleAsc');
   const [inputBrand, setInputBrand] = useState('');
-  const [inputMaxPrice, setInputMaxPrice] = useState('');
+  const [inputMaxPrice, setInputMaxPrice] = useState(500);
   const [brand, setBrand] = useState('');
-  const [maxPrice, setMaxPrice] = useState('');
+  const [maxPrice, setMaxPrice] = useState(500);
   const [page, setPage] = useState(0);
   const [sort, setSort] = useState('titleAsc');
   const [totalPages, setTotalPages] = useState(1);
