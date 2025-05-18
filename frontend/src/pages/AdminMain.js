@@ -28,7 +28,7 @@ const AdminMain = () => {
         const resetTimer = () => {
             clearTimeout(timer.current);
             timer.current = setTimeout(() => {
-            navigate("/adminAuth");
+                navigate("/adminAuth");
             }, logoutAfter);
         };
 
@@ -36,11 +36,6 @@ const AdminMain = () => {
             const events = ['mousemove', 'keydown', 'scroll', 'click'];
             events.forEach(event => window.addEventListener(event, resetTimer));
             resetTimer(); // Start timer
-
-            return () => {
-            events.forEach(event => window.removeEventListener(event, resetTimer));
-            clearTimeout(timer.current);
-            };
         });
 
         return null;
@@ -152,7 +147,6 @@ const AdminMain = () => {
                         (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
                     );
                     setSales(sortedOrders); // 或 setOrders
-                    console.log("Orders tab clicked, session extended.");
                 })
                 .catch(err => console.error("Failed to fetch orders:", err));
         }
