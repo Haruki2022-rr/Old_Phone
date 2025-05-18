@@ -29,7 +29,7 @@ const MainPage = () => {
                 setUser(fetched);
             })
             .catch(err => {
-                console.error(err);
+                //console.error(err);
                 console.log('clear cart');
                 clearCart()});
     }, []);
@@ -50,7 +50,7 @@ const MainPage = () => {
     axios.get("http://localhost:5050/api/oldPhoneDeals/phones")
       .then(res => {
         const phones = res.data;
-        console.log(phones);
+
         const brandsSet = new Set();
         phones.forEach(phone => {
           if (phone.brand && !brandsSet.has(phone.brand)) {
@@ -59,7 +59,7 @@ const MainPage = () => {
         });
         const brandsArray = Array.from(brandsSet);
         setAllBrands(brandsArray);
-        console.log(brandsArray);
+
       })
       .catch(err => console.error(err));
   }, []);
