@@ -11,7 +11,7 @@ These instructions will get you a copy of the project up and running on your loc
 - Node.js
 - npm (comes with Node.js)
 - MongoDB (local)
-- MailerSend API
+- MailerSend API (https://www.mailersend.com/help/how-to-start-sending-emails)
 
 Optional tools:
 - Vscode (or preferred IDE)
