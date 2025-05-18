@@ -25,7 +25,6 @@ const MainPage = () => {
         axios.get("/auth/currentUser")
             .then(res => {
                 const fetched = res.data.user;
-                console.log(fetched);
                 setUser(fetched);
             })
             .catch(err => {
