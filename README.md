@@ -108,3 +108,4 @@ npm start
 - can use /images/[filename] for phone images
 - demo dataset needs to be same name as given dataset
 - /admin is admin directory
+- admin user & pass is admin@gmail.com , 0000
