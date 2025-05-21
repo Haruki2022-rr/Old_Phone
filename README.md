@@ -101,3 +101,10 @@ npm start
 - Express Documentation
 
 - Node.js Documentation
+
+
+## extra help (after demo)
+- password for all accounts is Password@1
+- can use /images/[filename] for phone images
+- demo dataset needs to be same name as given dataset
+- /admin is admin directory
