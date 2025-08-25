@@ -1,4 +1,4 @@
-# OldPhoneDeals_TuT10_G4
+# OldPhoneDeals
 
 This project is a fully functioning eCommerce web application named OldPhoneDeals. This project will demonstrate our ability to collaboratively build a three-tier web application using the MERN stack (MongoDB, Express, React, Node.js).
 
@@ -91,6 +91,9 @@ npm start
 
 
 ## Acknowledgments
+
+- This project was completed as part of the coursework for **COMP5347** at the **University of Sydney**.  
+I would like to thank the professor and the teaching staff for their guidance and support throughout the assignment.  
 
 - Thanks to the University of Sydney tutors for guidance and support.
 
