@@ -1,6 +1,10 @@
 # OldPhoneDeals
 
-This project is a fully functioning eCommerce web application named OldPhoneDeals. This project will demonstrate our ability to collaboratively build a three-tier web application using the MERN stack (MongoDB, Express, React, Node.js).
+OldPhoneDeals is a fully functioning eCommerce web application built with the MERN stack (MongoDB, Express, React, Node.js).
+
+This project was developed as part of the coursework for COMP5347 at the University of Sydney and demonstrates the collaborative development of a three-tier web application using modern full-stack technologies.
+
+In this project, **I was primarily responsible for the overall project structure, database design, and implementing authentication & authorization features — including secure user login, session management, and admin access control.**
 
 ## Getting Started
 
